@@ -29,7 +29,7 @@ class Settings:
     demo_mode: bool
     # repr=False keeps keys out of logs and tracebacks.
     deepgram_api_key: str = field(repr=False)
-    anthropic_api_key: str = field(repr=False)
+    groq_api_key: str = field(repr=False)
     deepgram_model: str
     live_model: str
     summary_model: str
@@ -54,10 +54,10 @@ class Settings:
         settings = cls(
             demo_mode=reader.boolean("DEMO_MODE", False),
             deepgram_api_key=reader.text("DEEPGRAM_API_KEY", ""),
-            anthropic_api_key=reader.text("ANTHROPIC_API_KEY", ""),
+            groq_api_key=reader.text("GROQ_API_KEY", ""),
             deepgram_model=reader.text("DEEPGRAM_MODEL", "nova-3"),
-            live_model=reader.text("LIVE_MODEL", "claude-haiku-5-5"),
-            summary_model=reader.text("SUMMARY_MODEL", "claude-opus-5-5"),
+            live_model=reader.text("LIVE_MODEL", "openai/gpt-oss-20b"),
+            summary_model=reader.text("SUMMARY_MODEL", "openai/gpt-oss-120b"),
             risk_yellow_threshold=reader.integer("RISK_YELLOW_THRESHOLD", 40),
             risk_red_threshold=reader.integer("RISK_RED_THRESHOLD", 70),
             analysis_interval_seconds=reader.number("ANALYSIS_INTERVAL_SECONDS", 4.0),
@@ -79,8 +79,8 @@ class Settings:
                 "    Copy .env.example to .env and add your key (console.deepgram.com),\n"
                 "    or set DEMO_MODE=true to run without keys."
             )
-        if not self.anthropic_api_key and not self.demo_mode:
-            warnings.append("ANTHROPIC_API_KEY is not set. Scam analysis (Phase 2) will not run.")
+        if not self.groq_api_key and not self.demo_mode:
+            warnings.append("GROQ_API_KEY is not set. Scam analysis (Phase 2) will not run.")
 
         if not 0 <= self.risk_yellow_threshold < self.risk_red_threshold <= 100:
             errors.append(

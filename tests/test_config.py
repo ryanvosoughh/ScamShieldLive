@@ -6,8 +6,8 @@ from app.config import ConfigError, Settings
 def test_defaults_are_sensible():
     settings = Settings.from_env({"DEEPGRAM_API_KEY": "dg"})
     assert settings.demo_mode is False
-    assert settings.live_model == "claude-haiku-5-5"
-    assert settings.summary_model == "claude-opus-5-5"
+    assert settings.live_model == "openai/gpt-oss-20b"
+    assert settings.summary_model == "openai/gpt-oss-120b"
     assert settings.risk_yellow_threshold < settings.risk_red_threshold
 
 
@@ -22,9 +22,9 @@ def test_demo_mode_needs_no_keys():
     assert settings.validate() == []
 
 
-def test_missing_anthropic_key_is_only_a_warning_in_phase_1():
+def test_missing_groq_key_is_only_a_warning_in_phase_1():
     warnings = Settings.from_env({"DEEPGRAM_API_KEY": "dg"}).validate()
-    assert any("ANTHROPIC_API_KEY" in w for w in warnings)
+    assert any("GROQ_API_KEY" in w for w in warnings)
 
 
 def test_bad_values_are_all_reported_together():
@@ -41,5 +41,5 @@ def test_thresholds_must_be_ordered():
 
 
 def test_keys_never_appear_in_repr():
-    settings = Settings.from_env({"DEEPGRAM_API_KEY": "secret-dg", "ANTHROPIC_API_KEY": "secret-ant"})
+    settings = Settings.from_env({"DEEPGRAM_API_KEY": "secret-dg", "GROQ_API_KEY": "secret-groq"})
     assert "secret" not in repr(settings)

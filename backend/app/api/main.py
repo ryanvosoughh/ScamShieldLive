@@ -32,7 +32,7 @@ def create_app(settings: Settings | None = None, stt_factory=make_stt) -> FastAP
             "mode": "demo" if settings.demo_mode else "live",
             "keys": {
                 "deepgram": bool(settings.deepgram_api_key),
-                "anthropic": bool(settings.anthropic_api_key),
+                "groq": bool(settings.groq_api_key),
             },
         }
 
