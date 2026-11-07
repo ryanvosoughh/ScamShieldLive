@@ -1,7 +1,7 @@
 """Plain data containers shared across the app. No logic lives here.
 
-Phase 1 needs only these. TextSignal, ToneSignal, VoiceSignal, RiskState and
-TimelineEvent are added in Phase 2 when the code that uses them exists.
+ToneSignal, VoiceSignal, RiskState and TimelineEvent are added when the code
+that uses them exists.
 """
 from __future__ import annotations
 
@@ -38,3 +38,26 @@ class TranscriptSegment:
     confidence: float  # 0-1, as reported by the engine
     # Server clock when the segment arrived; used for latency measurement later.
     received_at: float = field(default_factory=time.monotonic)
+
+
+@dataclass(frozen=True)
+class TextSignal:
+    """What the live model made of the recent transcript.
+
+    risk is None when the check failed: that means UNKNOWN, never "safe".
+    """
+
+    risk: int | None  # 0-100, or None when unknown
+    scam_type: str  # a key from analysis.prompts.SCAM_TYPES, "other", "none", or "unknown"
+    evidence: tuple[str, ...] = ()  # phrases copied from the transcript
+    reason: str = ""  # one plain sentence
+    next_action: str = ""  # what the person should do now
+    error: str | None = None  # why the check failed; for logs, not for the screen
+
+    @property
+    def is_unknown(self) -> bool:
+        return self.risk is None
+
+    @classmethod
+    def unknown(cls, error: str) -> TextSignal:
+        return cls(risk=None, scam_type="unknown", error=error)
