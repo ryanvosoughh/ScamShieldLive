@@ -1,0 +1,13 @@
+# Pinned so a reviewer's machine installs exactly what was tested.
+# Python 3.12 (3.11+ should also work).
+
+fastapi==0.162.1        # HTTP + WebSocket server
+uvicorn==0.54.0         # ASGI server that runs FastAPI
+websockets==17.4        # uvicorn's WebSocket backend, and our client to Deepgram
+python-dotenv==1.2.4    # reads .env so keys never live in code
+anthropic==2.6.0        # Claude SDK (used from Phase 2)
+numpy==2.5.4            # tone features (used from Phase 3)
+
+# Tests
+pytest==9.2.0
+httpx==0.28.1           # needed by FastAPI's TestClient

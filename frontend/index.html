@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScamShield Live</title>
+    <meta name="description" content="A real-time voice guardian that listens to a phone call and warns you when it sounds like a scam." />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="top">
+        <h1>ScamShield Live</h1>
+        <span id="status" class="status status--idle" role="status" aria-live="polite">Ready</span>
+      </header>
+
+      <main>
+        <div id="error-banner" class="banner" role="alert" hidden></div>
+
+        <section class="controls" aria-label="Call controls">
+          <button id="start-btn" class="btn btn--primary" type="button">Start listening</button>
+          <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
+          <button id="file-btn" class="btn btn--quiet" type="button">Use an audio file instead</button>
+          <input id="file-input" type="file" accept="audio/*" hidden />
+        </section>
+        <p class="hint">
+          Put the call on speaker near this computer. Audio is processed live and nothing is stored.
+        </p>
+
+        <section class="panel" aria-labelledby="transcript-heading">
+          <div class="panel__head">
+            <h2 id="transcript-heading">Live transcript</h2>
+            <span id="lag" class="lag"></span>
+          </div>
+          <div id="transcript" class="transcript" tabindex="0">
+            <p class="placeholder">Press Start and speak. The words will appear here.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="foot">English only for now. Works best in Chrome or Edge.</footer>
+    </div>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

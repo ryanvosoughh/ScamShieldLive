@@ -1,0 +1,26 @@
+# Secrets: real keys live only in .env, never in git
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Audio: no recordings in the repo (privacy and repo size).
+# Generate test clips locally with scripts/make_sample_audio.sh.
+*.wav
+*.mp3
+*.m4a
+*.aiff
+*.flac
+*.ogg
+*.webm
+samples/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
