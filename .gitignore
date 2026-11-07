@@ -24,3 +24,7 @@ samples/
 .DS_Store
 .vscode/
 .idea/
+
+# My plan files: kept locally, not in the repo
+PHASES.md
+PHASES_SMALL_STEPS.md
