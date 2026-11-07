@@ -1,7 +1,6 @@
 """Plain data containers shared across the app. No logic lives here.
 
-ToneSignal, VoiceSignal, RiskState and TimelineEvent are added when the code
-that uses them exists.
+TimelineEvent is added in Phase 3, when the code that uses it exists.
 """
 from __future__ import annotations
 
@@ -62,3 +61,42 @@ class TextSignal:
     @classmethod
     def unknown(cls, error: str) -> TextSignal:
         return cls(risk=None, scam_type="unknown", error=error)
+
+
+@dataclass(frozen=True)
+class ToneSignal:
+    """How pressured the speech sounds (speech rate, loudness). A weak signal; arrives in Phase 3.
+
+    risk is None when there isn't enough audio to judge.
+    """
+
+    risk: int | None  # 0-100
+    detail: str = ""  # e.g. "fast, loud speech"
+
+
+@dataclass(frozen=True)
+class VoiceSignal:
+    """Whether the voice sounds synthetic. Experimental; a Phase 4 bonus.
+
+    risk is None when the check is uncertain, e.g. on poor phone audio. Shown as
+    "voice quality unusual", never as an accusation.
+    """
+
+    risk: int | None  # 0-100
+    detail: str = ""
+
+
+@dataclass(frozen=True)
+class RiskState:
+    """What the risk meter shows after each check."""
+
+    level: RiskLevel
+    score: float | None  # smoothed 0-100; None while the level is UNKNOWN
+    scam_type: str = "unknown"
+    reason: str = ""
+    next_action: str = ""
+    evidence: tuple[str, ...] = ()  # every evidence phrase heard so far in the call
+    red_flags: tuple[str, ...] = ()  # every red flag heard so far in the call
+    disagreement: str | None = None  # set when the signals point different ways
+    stale: bool = False  # the latest check failed; this is the last good result
+    breakdown: tuple[str, ...] = ()  # one line per signal, from RiskScorer.explain()
