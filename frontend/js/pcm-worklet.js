@@ -8,6 +8,7 @@ class PcmCaptureProcessor extends AudioWorkletProcessor {
     const { targetRate, chunkSamples } = options.processorOptions;
     // `sampleRate` is a global in the audio worklet scope: the input rate.
     this.ratio = sampleRate / targetRate; // e.g. 48000 / 16000 = 3 input samples per output
+    this.chunkSamples = chunkSamples;
     this.chunk = new Int16Array(chunkSamples);
     this.filled = 0;
     // Downsampling by averaging: each output sample is the mean of the input
@@ -39,9 +40,11 @@ class PcmCaptureProcessor extends AudioWorkletProcessor {
     const s = Math.max(-1, Math.min(1, sample));
     this.chunk[this.filled++] = s < 0 ? s * 0x8000 : s * 0x7fff;
     if (this.filled === this.chunk.length) {
-      // Transfer the buffer (no copy) and start a fresh one.
+      // Transfer the buffer (no copy) and start a fresh one. Transferring
+      // detaches the old array (its length becomes 0), so size the new one
+      // from the saved chunk size, not from this.chunk.length.
       this.port.postMessage(this.chunk.buffer, [this.chunk.buffer]);
-      this.chunk = new Int16Array(this.chunk.length);
+      this.chunk = new Int16Array(this.chunkSamples);
       this.filled = 0;
     }
   }
