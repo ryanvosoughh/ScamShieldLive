@@ -17,6 +17,7 @@ SCAM = (
 )
 GOOD = {
     "evidence": ["I need your help right now", "Please don't tell mom", "buy some gift cards"],
+    "red_flags": ["unusual_payment"],
     "reason": "The caller wants money fast and wants it kept secret.",
     "scam_type": "grandchild",
     "risk": 90,
@@ -118,7 +119,7 @@ def test_risk_must_be_a_whole_number_from_0_to_100(risk):
 
 
 def test_risk_at_the_edges_is_accepted():
-    assert parse_reply(json.dumps({**GOOD, "risk": 0}), SCAM).risk == 0
+    assert parse_reply(json.dumps({**GOOD, "risk": 0, "red_flags": []}), SCAM).risk == 0
     assert parse_reply(json.dumps({**GOOD, "risk": 100}), SCAM).risk == 100
 
 
@@ -128,6 +129,8 @@ def test_risk_at_the_edges_is_accepted():
         ("evidence", "buy gift cards"),  # a string, not a list
         ("evidence", ["ok", 3]),  # not all strings
         ("scam_type", "pyramid"),  # not one of ours
+        ("red_flags", "asks_for_code"),  # a string, not a list
+        ("red_flags", ["asks_for_code", "sounds_shifty"]),  # not one of ours
         ("reason", ""),
         ("next_action", None),
     ],
@@ -140,6 +143,47 @@ def test_wrong_types_and_values_are_rejected(field, value):
 def test_a_json_list_instead_of_an_object_is_rejected():
     with pytest.raises(InvalidReply, match="object"):
         parse_reply("[1, 2, 3]", SCAM)
+
+
+# Red flags: a polite tone can't talk the score down
+
+
+def test_a_red_flag_lifts_a_calm_call_to_the_red_line():
+    calm = {**GOOD, "risk": 55, "red_flags": ["asks_for_code"]}
+    assert parse_reply(json.dumps(calm), SCAM).risk == 70
+
+
+def test_the_red_flag_floor_follows_the_red_threshold():
+    calm = {**GOOD, "risk": 55, "red_flags": ["asks_for_code"]}
+    assert parse_reply(json.dumps(calm), SCAM, red_flag_floor=80).risk == 80
+
+
+def test_a_red_flag_never_lowers_a_higher_risk():
+    assert parse_reply(json.dumps({**GOOD, "risk": 95}), SCAM).risk == 95
+
+
+def test_without_red_flags_the_model_risk_stands():
+    mild = {**GOOD, "risk": 30, "red_flags": []}
+    assert parse_reply(json.dumps(mild), SCAM).risk == 30
+
+
+def test_a_call_with_a_red_flag_is_never_labelled_no_scam():
+    mixed = {**GOOD, "risk": 20, "scam_type": "none", "red_flags": ["safe_account"]}
+    signal = parse_reply(json.dumps(mixed), SCAM)
+    assert signal.scam_type == "other"
+    assert signal.risk == 70
+
+
+def test_repeated_red_flags_are_kept_once():
+    twice = {**GOOD, "red_flags": ["asks_for_code", "unusual_payment", "asks_for_code"]}
+    assert parse_reply(json.dumps(twice), SCAM).red_flags == ("asks_for_code", "unusual_payment")
+
+
+def test_from_settings_uses_the_red_threshold_as_the_floor():
+    from app.config import Settings
+
+    settings = Settings.from_env({"DEMO_MODE": "true", "GROQ_API_KEY": "test-key", "RISK_RED_THRESHOLD": "80"})
+    assert ScamAnalyzer.from_settings(settings).red_flag_floor == 80
 
 
 def test_evidence_nobody_said_is_dropped():

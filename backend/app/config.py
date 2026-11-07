@@ -56,7 +56,7 @@ class Settings:
             deepgram_api_key=reader.text("DEEPGRAM_API_KEY", ""),
             groq_api_key=reader.text("GROQ_API_KEY", ""),
             deepgram_model=reader.text("DEEPGRAM_MODEL", "nova-3"),
-            live_model=reader.text("LIVE_MODEL", "openai/gpt-oss-20b"),
+            live_model=reader.text("LIVE_MODEL", "openai/gpt-oss-120b"),
             summary_model=reader.text("SUMMARY_MODEL", "openai/gpt-oss-120b"),
             risk_yellow_threshold=reader.integer("RISK_YELLOW_THRESHOLD", 40),
             risk_red_threshold=reader.integer("RISK_RED_THRESHOLD", 70),

@@ -6,7 +6,7 @@ from app.config import ConfigError, Settings
 def test_defaults_are_sensible():
     settings = Settings.from_env({"DEEPGRAM_API_KEY": "dg"})
     assert settings.demo_mode is False
-    assert settings.live_model == "openai/gpt-oss-20b"
+    assert settings.live_model == "openai/gpt-oss-120b"
     assert settings.summary_model == "openai/gpt-oss-120b"
     assert settings.risk_yellow_threshold < settings.risk_red_threshold
 

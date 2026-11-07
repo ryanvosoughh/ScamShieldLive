@@ -50,6 +50,7 @@ class TextSignal:
     risk: int | None  # 0-100, or None when unknown
     scam_type: str  # a key from analysis.prompts.SCAM_TYPES, "other", "none", or "unknown"
     evidence: tuple[str, ...] = ()  # phrases copied from the transcript
+    red_flags: tuple[str, ...] = ()  # keys from analysis.prompts.RED_FLAGS
     reason: str = ""  # one plain sentence
     next_action: str = ""  # what the person should do now
     error: str | None = None  # why the check failed; for logs, not for the screen

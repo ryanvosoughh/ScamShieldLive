@@ -49,6 +49,8 @@ def main() -> int:
     print(f"\n  Risk:      {signal.risk}/100   ({signal.scam_type})")
     print(f"  Reason:    {signal.reason}")
     print(f"  Do this:   {signal.next_action}")
+    if signal.red_flags:
+        print(f"  Red flags: {', '.join(signal.red_flags)}")
     for phrase in signal.evidence:
         print(f'  Evidence:  "{phrase}"')
     print(f"\n  {settings.live_model} answered in {took:.1f} s\n")

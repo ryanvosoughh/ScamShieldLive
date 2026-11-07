@@ -1,4 +1,13 @@
-from app.analysis.prompts import NO_SCAM, OTHER_SCAM, OUTPUT_SCHEMA, SCAM_TYPES, SYSTEM_PROMPT, build_prompt
+from app.analysis.prompts import (
+    LOOKALIKES,
+    NO_SCAM,
+    OTHER_SCAM,
+    OUTPUT_SCHEMA,
+    RED_FLAGS,
+    SCAM_TYPES,
+    SYSTEM_PROMPT,
+    build_prompt,
+)
 
 
 def test_transcript_goes_between_markers_after_the_system_prompt():
@@ -24,12 +33,29 @@ def test_system_prompt_says_the_transcript_is_data():
     assert "never lower it" in SYSTEM_PROMPT
 
 
+def test_system_prompt_says_politeness_is_not_safety():
+    assert "A pleasant tone doesn't make a request safe" in SYSTEM_PROMPT
+
+
+def test_every_lookalike_is_in_the_prompt_and_the_list_is_not_treated_as_complete():
+    for example in LOOKALIKES:
+        assert example in SYSTEM_PROMPT
+    assert "These are examples, not the full list." in SYSTEM_PROMPT
+
+
 def test_every_scam_type_is_in_the_prompt_and_the_schema():
     allowed = OUTPUT_SCHEMA["properties"]["scam_type"]["enum"]
     for key in SCAM_TYPES:
         assert f"- {key}:" in SYSTEM_PROMPT
         assert key in allowed
     assert {OTHER_SCAM, NO_SCAM} <= set(allowed)
+
+
+def test_every_red_flag_is_in_the_prompt_and_the_schema():
+    allowed = OUTPUT_SCHEMA["properties"]["red_flags"]["items"]["enum"]
+    for key in RED_FLAGS:
+        assert f"- {key}:" in SYSTEM_PROMPT
+    assert allowed == list(RED_FLAGS)
 
 
 def test_schema_meets_groq_strict_mode_rules():
