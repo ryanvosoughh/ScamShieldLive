@@ -13,6 +13,16 @@
   --busy: #8a6100;
   --error: #b3261e;
   --error-bg: #fdecea;
+  /* Risk levels: a strong colour for the word and dot, a pale one for the card. */
+  --safe: #1a7f37;
+  --safe-bg: #e8f5ec;
+  --warn: #8a5a00;
+  --warn-bg: #fff3d6;
+  --danger: #b3261e;
+  --danger-bg: #fdecea;
+  --unknown: #5a6270;
+  --unknown-bg: #ffffff;
+  --mark-bg: #ffe08a;
   --radius: 12px;
   color-scheme: light;
 }
@@ -30,6 +40,15 @@
     --busy: #e0b341;
     --error: #ff8a80;
     --error-bg: #3a1714;
+    --safe: #4ac26b;
+    --safe-bg: #10281a;
+    --warn: #f0c04a;
+    --warn-bg: #33280c;
+    --danger: #ff8a80;
+    --danger-bg: #3a1714;
+    --unknown: #a3abb8;
+    --unknown-bg: #181c22;
+    --mark-bg: #6b5410;
     color-scheme: dark;
   }
 }
@@ -46,11 +65,25 @@
   --busy: #e0b341;
   --error: #ff8a80;
   --error-bg: #3a1714;
+  --safe: #4ac26b;
+  --safe-bg: #10281a;
+  --warn: #f0c04a;
+  --warn-bg: #33280c;
+  --danger: #ff8a80;
+  --danger-bg: #3a1714;
+  --unknown: #a3abb8;
+  --unknown-bg: #181c22;
+  --mark-bg: #6b5410;
   color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* The hidden attribute always wins, even over display: flex. */
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -108,6 +141,11 @@ h2 {
 }
 
 .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.controls__group {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -185,4 +223,163 @@ h2 {
   margin-top: 20px;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+/* ---- Risk meter ------------------------------------------------------- */
+
+.risk {
+  --level: var(--unknown);
+  --level-bg: var(--unknown-bg);
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  border: 3px solid var(--level);
+  background: var(--level-bg);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.risk--green { --level: var(--safe); --level-bg: var(--safe-bg); }
+.risk--yellow { --level: var(--warn); --level-bg: var(--warn-bg); }
+.risk--red { --level: var(--danger); --level-bg: var(--danger-bg); }
+
+.risk__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.risk__dot {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--level);
+}
+.risk__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.2;
+  color: var(--level);
+}
+.risk__score {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.risk__bar {
+  height: 10px;
+  margin: 14px 0 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.risk__fill {
+  width: 0;
+  height: 100%;
+  background: var(--level);
+  transition: width 0.4s;
+}
+.risk__reason {
+  margin: 12px 0 0;
+  font-size: 1.2rem;
+}
+.risk__action {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border-left: 6px solid var(--level);
+  font-size: 1.2rem;
+}
+.risk__flags {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.risk__flags li {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--level);
+  background: var(--surface);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.risk__note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.risk__details {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.risk__details summary { cursor: pointer; }
+.risk__details ul { margin: 6px 0 0; padding-left: 20px; }
+
+/* Evidence phrases in the transcript */
+mark {
+  background: var(--mark-bg);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+/* ---- Live / demo switch ----------------------------------------------- */
+
+.mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+.mode__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+  cursor: pointer;
+}
+.mode__option:has(input:checked) { border-color: var(--primary); }
+.mode__option:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+.mode__option input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); }
+.mode__option:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.note {
+  margin: -4px 0 14px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.select {
+  min-height: 52px;
+  max-width: 100%;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

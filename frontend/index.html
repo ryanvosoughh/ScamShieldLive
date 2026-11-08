@@ -17,13 +17,47 @@
       <main>
         <div id="error-banner" class="banner" role="alert" hidden></div>
 
-        <section class="controls" aria-label="Call controls">
-          <button id="start-btn" class="btn btn--primary" type="button">Start listening</button>
-          <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
-          <button id="file-btn" class="btn btn--quiet" type="button">Use an audio file instead</button>
-          <input id="file-input" type="file" accept="audio/*" hidden />
+        <!-- The risk meter: the one thing to look at during a call. -->
+        <section id="risk" class="risk risk--unknown" aria-labelledby="risk-title">
+          <div class="risk__head">
+            <span class="risk__dot" aria-hidden="true"></span>
+            <h2 id="risk-title" class="risk__title" data-part="title" aria-live="polite">Not listening</h2>
+            <span class="risk__score" data-part="score"></span>
+          </div>
+          <div class="risk__bar" aria-hidden="true"><div class="risk__fill" data-part="fill"></div></div>
+          <p class="risk__reason" data-part="reason" aria-live="polite"></p>
+          <p class="risk__action" data-part="action" hidden>
+            <strong>What to do:</strong> <span data-part="action-text"></span>
+          </p>
+          <ul class="risk__flags" data-part="flags" aria-label="Warning signs heard" hidden></ul>
+          <p class="risk__note" data-part="note" hidden></p>
+          <details class="risk__details" data-part="details" hidden>
+            <summary>How this was decided</summary>
+            <ul data-part="breakdown"></ul>
+          </details>
         </section>
-        <p class="hint">
+
+        <fieldset class="mode">
+          <legend class="visually-hidden">Call type</legend>
+          <label class="mode__option"><input type="radio" name="mode" id="mode-live" value="live" checked /> Live call</label>
+          <label class="mode__option"><input type="radio" name="mode" id="mode-demo" value="demo" /> Demo call</label>
+        </fieldset>
+        <p id="mode-note" class="note" hidden></p>
+
+        <section class="controls" aria-label="Call controls">
+          <div id="live-controls" class="controls__group">
+            <button id="start-btn" class="btn btn--primary" type="button">Start listening</button>
+            <button id="file-btn" class="btn btn--quiet" type="button">Use an audio file instead</button>
+            <input id="file-input" type="file" accept="audio/*" hidden />
+          </div>
+          <div id="demo-controls" class="controls__group" hidden>
+            <label for="scenario" class="visually-hidden">Choose a demo call</label>
+            <select id="scenario" class="select"></select>
+            <button id="demo-btn" class="btn btn--primary" type="button">Play demo call</button>
+          </div>
+          <button id="stop-btn" class="btn" type="button" disabled>Stop</button>
+        </section>
+        <p id="hint" class="hint">
           Put the call on speaker near this computer. Audio is processed live and nothing is stored.
         </p>
 

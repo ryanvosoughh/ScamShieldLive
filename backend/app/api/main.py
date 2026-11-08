@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.analysis import ScamAnalyzer
 from app.api.ws import router as ws_router
 from app.config import PROJECT_ROOT, Settings, load_or_exit
+from app.demo import DEFAULT_SCENARIO, list_scenarios, load_scenario
 from app.stt import make_stt
 
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -45,6 +46,21 @@ def create_app(
                 "groq": bool(settings.groq_api_key),
             },
         }
+
+    @app.get("/api/demo-calls")
+    def demo_calls() -> list[dict]:
+        """The scripted calls the page can play, the default one first."""
+        ids = sorted(list_scenarios(), key=lambda scenario_id: (scenario_id != DEFAULT_SCENARIO, scenario_id))
+        return [
+            {
+                "id": s.id,
+                "title": s.title,
+                "kind": s.kind,
+                "description": s.description,
+                "seconds": round(s.duration),
+            }
+            for s in map(load_scenario, ids)
+        ]
 
     app.include_router(ws_router)
     # Mounted last so /health and /ws/call take priority over static files.

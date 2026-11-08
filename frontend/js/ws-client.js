@@ -65,7 +65,9 @@ export class WsClient {
   }
 }
 
-export function callSocketUrl() {
+// The call socket. With a scenario id it plays that scripted demo call instead.
+export function callSocketUrl(scenario) {
   const scheme = location.protocol === "https:" ? "wss" : "ws";
-  return `${scheme}://${location.host}/ws/call`;
+  const query = scenario ? `?scenario=${encodeURIComponent(scenario)}` : "";
+  return `${scheme}://${location.host}/ws/call${query}`;
 }

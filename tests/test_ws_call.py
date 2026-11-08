@@ -186,3 +186,11 @@ def test_speech_leads_to_a_risk_state_in_the_browser():
 def test_without_a_groq_key_the_browser_is_told_analysis_is_off():
     with make_client(FakeSTT()).websocket_connect("/ws/call") as ws:
         assert ws.receive_json()["analysis"] is False
+
+
+def test_the_page_can_list_the_demo_calls_default_first():
+    calls = make_client(FakeSTT()).get("/api/demo-calls").json()
+    assert [c["id"] for c in calls] == ["grandchild_scam", "bank_scam", "normal_call"]
+    assert calls[0]["title"] == "Grandchild in trouble"
+    assert {c["kind"] for c in calls} == {"scam", "normal"}
+    assert all(c["seconds"] > 0 and c["description"] for c in calls)
