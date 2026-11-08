@@ -87,12 +87,66 @@ def test_stt_connect_failure_becomes_a_friendly_error():
     assert "API key" in message["message"]
 
 
-def test_demo_mode_explains_it_is_not_built_yet():
-    settings = Settings.from_env({"DEMO_MODE": "true"})
-    with TestClient(create_app(settings)).websocket_connect("/ws/call") as ws:
+def receive_until_ended(ws):
+    messages = []
+    while True:
+        message = ws.receive_json()
+        messages.append(message)
+        if message["type"] in ("ended", "error"):
+            return messages
+
+
+def demo_app(env=None, analyzer_factory=None):
+    """No keys at all unless the test adds them; checks every 0.02 s; demo calls at 200x speed."""
+    settings = Settings.from_env({"DEMO_MODE": "true", "ANALYSIS_INTERVAL_SECONDS": "0.02", **(env or {})})
+    kwargs = {"analyzer_factory": analyzer_factory} if analyzer_factory else {}
+    return create_app(settings, demo_speed=200, **kwargs)
+
+
+def test_demo_mode_with_no_keys_plays_the_grandchild_scam_to_red():
+    with TestClient(demo_app()).websocket_connect("/ws/call") as ws:
+        ready = ws.receive_json()
+        messages = receive_until_ended(ws)
+    assert ready["demo"] == {"scenario": "grandchild_scam", "title": "Grandchild in trouble", "scripted_analysis": True}
+    assert ready["analysis"] is True
+    finals = [m["text"] for m in messages if m["type"] == "transcript" and m["is_final"]]
+    states = [m for m in messages if m["type"] == "state"]
+    assert finals[0] == "Hi Nana, it's me."
+    assert states[-1]["level"] == "red"
+    assert messages[-1]["type"] == "ended"  # the call ended by itself when the script did
+
+
+def test_a_demo_call_can_be_chosen_by_name():
+    with TestClient(demo_app()).websocket_connect("/ws/call?scenario=normal_call") as ws:
+        assert ws.receive_json()["demo"]["scenario"] == "normal_call"
+        states = [m for m in receive_until_ended(ws) if m["type"] == "state"]
+    assert states and {s["level"] for s in states} == {"green"}
+
+
+def test_an_unknown_demo_call_gets_a_friendly_error():
+    with TestClient(demo_app()).websocket_connect("/ws/call?scenario=../../.env") as ws:
         message = ws.receive_json()
     assert message["type"] == "error"
-    assert "Phase 2" in message["message"]
+    assert message["code"] == "unknown_scenario"
+    assert "Choose one of" in message["message"]
+
+
+def test_with_a_groq_key_a_demo_call_uses_the_real_check():
+    app = demo_app(analyzer_factory=lambda _s: RedAnalyzer())
+    with TestClient(app).websocket_connect("/ws/call?scenario=normal_call") as ws:
+        assert ws.receive_json()["demo"]["scripted_analysis"] is False
+        states = [m for m in receive_until_ended(ws) if m["type"] == "state"]
+    # RedAnalyzer says 90 whatever it hears: proof the scripted verdicts were not used.
+    assert states[-1]["reason"] == "Money and secrecy."
+
+
+def test_stop_ends_a_demo_call_early():
+    settings = Settings.from_env({"DEMO_MODE": "true"})
+    with TestClient(create_app(settings, demo_speed=1.0)).websocket_connect("/ws/call") as ws:
+        ws.receive_json()  # ready
+        ws.send_json({"type": "stop"})
+        messages = receive_until_ended(ws)
+    assert messages[-1]["type"] == "ended"
 
 
 class ScamSTT(FakeSTT):

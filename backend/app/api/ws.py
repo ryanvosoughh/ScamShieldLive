@@ -1,16 +1,22 @@
 """The /ws/call WebSocket: one connection is one call.
 
+    /ws/call                      a live call: the browser streams audio
+    /ws/call?scenario=bank_scam   a scripted demo call: no audio, no keys needed
+                                  (with DEMO_MODE=true every call is a demo call)
+
 Messages from the browser:
   binary frame         16 kHz mono 16-bit PCM audio (about 100 ms per frame)
   {"type": "stop"}     the user pressed Stop
 
 Messages to the browser (all JSON):
-  {"type": "ready", "analysis"}                      transcription is connected; start sending audio.
-                                                     analysis is false when there is no Groq key
+  {"type": "ready", "analysis", "demo"}              transcription is connected; start sending audio.
+                                                     analysis is false when there is no Groq key;
+                                                     demo describes the scripted call, or is null
   {"type": "transcript", "text", "is_final", ...}    live text
   {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check
   {"type": "error", "code", "message"}               something failed; message is user-friendly
-  {"type": "ended"}                                  the call is over; the server then closes
+  {"type": "ended"}                                  the call is over (Stop, or the demo script
+                                                     finished); the server then closes
 """
 from __future__ import annotations
 
@@ -23,9 +29,13 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
 from app.analysis import TranscriptWindow
+from app.demo import DEFAULT_SCENARIO, DemoError, ScriptedAnalyzer, load_scenario
 from app.scoring import RiskScorer
 from app.session import CallSession, SendFn
-from app.stt import SAMPLE_RATE, STTError
+from app.stt import SAMPLE_RATE, ReplaySTT, STTError
+
+# Scripted verdicts cost nothing, so a keyless demo isn't held to Groq's per-minute cap.
+UNLIMITED_CHECKS = 1_000
 
 logger = logging.getLogger(__name__)
 
@@ -35,29 +45,47 @@ router = APIRouter()
 @router.websocket("/ws/call")
 async def call_socket(websocket: WebSocket) -> None:
     await websocket.accept()
-    settings = websocket.app.state.settings
-    stt_factory = websocket.app.state.stt_factory
+    state = websocket.app.state
+    settings = state.settings
     send = _make_sender(websocket)
+    analyzer = state.analyzer  # shared by all calls; None without a Groq key
+    checks_per_minute = settings.checks_per_minute
+    demo = None
 
     try:
+        scenario_id = websocket.query_params.get("scenario") or (DEFAULT_SCENARIO if settings.demo_mode else None)
+        if scenario_id:
+            scenario = load_scenario(scenario_id)
+            stt = ReplaySTT(scenario, speed=state.demo_speed)
+            scripted = analyzer is None
+            if scripted:
+                analyzer = ScriptedAnalyzer(scenario)
+                checks_per_minute = UNLIMITED_CHECKS
+            demo = {"scenario": scenario.id, "title": scenario.title, "scripted_analysis": scripted}
+        else:
+            stt = state.stt_factory(settings)
         session = CallSession(
-            stt=stt_factory(settings),
+            stt=stt,
             send=send,
-            analyzer=websocket.app.state.analyzer,  # shared by all calls; None without a Groq key
+            analyzer=analyzer,
             scorer=RiskScorer.from_settings(settings),
             window=TranscriptWindow(window_seconds=settings.window_seconds),
             check_interval=settings.analysis_interval_seconds,
-            checks_per_minute=settings.checks_per_minute,
+            checks_per_minute=checks_per_minute,
         )
         await session.start()
+    except DemoError as exc:
+        await send({"type": "error", "code": "unknown_scenario", "message": str(exc)})
+        await _close(websocket)
+        return
     except STTError as exc:
         await send({"type": "error", "code": "stt_unavailable", "message": str(exc)})
         await _close(websocket)
         return
 
-    await send({"type": "ready", "sample_rate": SAMPLE_RATE, "analysis": session.analysis_on})
+    await send({"type": "ready", "sample_rate": SAMPLE_RATE, "analysis": session.analysis_on, "demo": demo})
     try:
-        await _receive_until_stop(websocket, session)
+        await _run_until_done(websocket, session, stt)
     except STTError as exc:
         await send({"type": "error", "code": "stt_failed", "message": str(exc)})
     except Exception:
@@ -67,6 +95,20 @@ async def call_socket(websocket: WebSocket) -> None:
         await session.end()
         await send({"type": "ended"})
         await _close(websocket)
+
+
+async def _run_until_done(websocket: WebSocket, session: CallSession, stt) -> None:
+    """Run until the browser says stop or disconnects, or a demo script finishes."""
+    browser = asyncio.create_task(_receive_until_stop(websocket, session))
+    script_over = asyncio.create_task(stt.finished.wait())
+    try:
+        done, _ = await asyncio.wait({browser, script_over}, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for task in (browser, script_over):
+            task.cancel()
+        await asyncio.gather(browser, script_over, return_exceptions=True)
+    if browser in done:
+        browser.result()  # passes on an STTError or a crash to the caller
 
 
 async def _receive_until_stop(websocket: WebSocket, session: CallSession) -> None:

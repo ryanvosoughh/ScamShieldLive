@@ -1,0 +1,101 @@
+{
+  "title": "Fake bank fraud team",
+  "kind": "scam",
+  "description": "A caller pretending to be the bank's fraud team asks for a security code and to move savings to a 'safe account'.",
+  "tail_seconds": 5,
+  "lines": [
+    {
+      "start": 0.0,
+      "end": 5.0,
+      "text": "Good afternoon, this is David calling from the fraud team at your bank.",
+      "verdict": {
+        "risk": 15,
+        "scam_type": "none",
+        "red_flags": [],
+        "evidence": [],
+        "reason": "Someone says they are from your bank. Nothing has been asked for yet.",
+        "next_action": "Listen carefully. Don't share any details yet."
+      }
+    },
+    {
+      "start": 5.6,
+      "end": 9.4,
+      "text": "We've spotted some unusual payments on your account this morning."
+    },
+    {
+      "start": 10.0,
+      "end": 14.6,
+      "text": "Did you just pay nine hundred pounds to an online electronics shop?",
+      "verdict": {
+        "risk": 20,
+        "scam_type": "none",
+        "red_flags": [],
+        "evidence": [],
+        "reason": "A real bank might ask about a payment like this.",
+        "next_action": "If unsure, hang up and call the number on the back of your card."
+      }
+    },
+    {
+      "start": 15.2,
+      "end": 17.1,
+      "text": "No, I didn't. Oh dear."
+    },
+    {
+      "start": 17.7,
+      "end": 24.2,
+      "text": "Don't worry, we can protect your money, but we need to act quickly before more goes out.",
+      "verdict": {
+        "risk": 55,
+        "scam_type": "bank",
+        "red_flags": [],
+        "evidence": [
+          "we need to act quickly"
+        ],
+        "reason": "They are rushing you about your money. A real bank lets you call back.",
+        "next_action": "Hang up and call the number on the back of your card."
+      }
+    },
+    {
+      "start": 24.8,
+      "end": 32.9,
+      "text": "I'm sending a security code to your phone now. Please read it back to me so I can confirm it's you.",
+      "verdict": {
+        "risk": 85,
+        "scam_type": "bank",
+        "red_flags": [
+          "asks_for_code"
+        ],
+        "evidence": [
+          "Please read it back to me",
+          "we need to act quickly"
+        ],
+        "reason": "A real bank never asks you to read out a security code.",
+        "next_action": "Don't read out any code. Hang up and call the number on the back of your card."
+      }
+    },
+    {
+      "start": 33.5,
+      "end": 38.5,
+      "text": "Then we'll move your savings into a new safe account while we investigate.",
+      "verdict": {
+        "risk": 95,
+        "scam_type": "bank",
+        "red_flags": [
+          "asks_for_code",
+          "safe_account"
+        ],
+        "evidence": [
+          "move your savings into a new safe account",
+          "Please read it back to me"
+        ],
+        "reason": "Asking for your code and moving money to a 'safe account' is a bank scam.",
+        "next_action": "Don't read out any code or move money. Hang up and call the number on the back of your card."
+      }
+    },
+    {
+      "start": 39.1,
+      "end": 45.3,
+      "text": "And please don't mention this to anyone at your branch. We think staff may be involved."
+    }
+  ]
+}

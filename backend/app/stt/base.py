@@ -1,10 +1,11 @@
 """The common interface every speech-to-text source implements.
 
 CallSession only talks to this interface, so the live engine (DeepgramSTT) and
-the keyless demo engine (ReplaySTT, Phase 2) are interchangeable.
+the keyless demo engine (ReplaySTT) are interchangeable.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
@@ -29,6 +30,9 @@ class SpeechToTextClient(ABC):
     def __init__(self) -> None:
         self._transcript_callback: TranscriptCallback | None = None
         self._error_callback: ErrorCallback | None = None
+        # Set by a source that ends on its own (a replayed demo call). A live
+        # call never sets it: it ends when the person presses Stop.
+        self.finished = asyncio.Event()
 
     def on_transcript(self, callback: TranscriptCallback) -> None:
         """Register who receives each transcript segment."""

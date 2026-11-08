@@ -160,29 +160,29 @@ def parse_reply(raw: str, transcript: str, red_flag_floor: int = DEFAULT_RED_FLA
     return TextSignal(
         risk=risk,
         scam_type=scam_type,
-        evidence=_phrases_from_transcript(evidence, transcript),
+        evidence=phrases_from_transcript(evidence, transcript),
         red_flags=red_flags,
         reason=_clip(reason),
         next_action=_clip(next_action),
     )
 
 
-def _phrases_from_transcript(phrases: list[str], transcript: str) -> tuple[str, ...]:
+def phrases_from_transcript(phrases: list[str], transcript: str) -> tuple[str, ...]:
     """Keep only evidence that was really said, so the screen never quotes words nobody spoke.
 
     Matching ignores case, punctuation and curly quotes, which the model may change.
     """
-    spoken = f" {_words(transcript)} "
+    spoken = f" {normalised_words(transcript)} "
     kept: list[str] = []
     for phrase in phrases:
         phrase = phrase.strip()
-        words = _words(phrase)
+        words = normalised_words(phrase)
         if words and f" {words} " in spoken and phrase not in kept:
             kept.append(phrase)
     return tuple(kept[:MAX_EVIDENCE])
 
 
-def _words(text: str) -> str:
+def normalised_words(text: str) -> str:
     text = text.lower().replace("’", "'").replace("‘", "'")
     return " ".join(re.findall(r"[a-z0-9']+", text))
 

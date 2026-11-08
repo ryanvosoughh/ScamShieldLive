@@ -1,0 +1,99 @@
+{
+  "title": "Grandchild in trouble",
+  "kind": "scam",
+  "description": "A caller pretending to be a grandchild needs bail money, wants it kept secret, and asks for gift cards.",
+  "tail_seconds": 5,
+  "lines": [
+    {
+      "start": 0.0,
+      "end": 1.5,
+      "text": "Hi Nana, it's me.",
+      "verdict": {
+        "risk": 5,
+        "scam_type": "none",
+        "red_flags": [],
+        "evidence": [],
+        "reason": "Nothing worrying so far.",
+        "next_action": "No action needed."
+      }
+    },
+    {
+      "start": 2.1,
+      "end": 4.4,
+      "text": "Oh, hello love! Is everything alright?"
+    },
+    {
+      "start": 5.0,
+      "end": 10.4,
+      "text": "Not really. I'm in a bit of trouble and I really need your help.",
+      "verdict": {
+        "risk": 20,
+        "scam_type": "none",
+        "red_flags": [],
+        "evidence": [],
+        "reason": "Someone needs help, but nothing has been asked for yet.",
+        "next_action": "Listen carefully. Don't agree to pay anything."
+      }
+    },
+    {
+      "start": 11.0,
+      "end": 19.5,
+      "text": "I was in a car accident, and the police say I have to pay bail today or they'll keep me in overnight.",
+      "verdict": {
+        "risk": 60,
+        "scam_type": "grandchild",
+        "red_flags": [],
+        "evidence": [
+          "pay bail today"
+        ],
+        "reason": "A relative in sudden trouble needs money fast. This is a common scam story.",
+        "next_action": "Don't pay anything yet. Hang up and call them back on the number you already have."
+      }
+    },
+    {
+      "start": 20.1,
+      "end": 22.0,
+      "text": "Oh no! Are you hurt?"
+    },
+    {
+      "start": 22.6,
+      "end": 28.0,
+      "text": "I'm okay, just shaken. Please don't tell Mum, she'll be so upset with me.",
+      "verdict": {
+        "risk": 85,
+        "scam_type": "grandchild",
+        "red_flags": [],
+        "evidence": [
+          "Please don't tell Mum",
+          "pay bail today"
+        ],
+        "reason": "They want money fast and want you to keep it secret.",
+        "next_action": "Hang up and call your grandchild or their parents on a number you already have."
+      }
+    },
+    {
+      "start": 28.6,
+      "end": 34.0,
+      "text": "Can you go to the shop and buy five hundred pounds of gift cards?",
+      "verdict": {
+        "risk": 95,
+        "scam_type": "grandchild",
+        "red_flags": [
+          "unusual_payment"
+        ],
+        "evidence": [
+          "buy five hundred pounds of gift cards",
+          "Please don't tell Mum",
+          "pay bail today"
+        ],
+        "reason": "Bail is never paid in gift cards. This is a scam.",
+        "next_action": "Don't buy any gift cards. Hang up and call your family on a number you already have."
+      }
+    },
+    {
+      "start": 34.6,
+      "end": 40.8,
+      "text": "Then read me the numbers on the back. I'll stay on the line while you go."
+    }
+  ]
+}

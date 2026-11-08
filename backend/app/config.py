@@ -82,7 +82,9 @@ class Settings:
                 "    or set DEMO_MODE=true to run without keys."
             )
         if not self.groq_api_key and not self.demo_mode:
-            warnings.append("GROQ_API_KEY is not set. Scam analysis (Phase 2) will not run.")
+            warnings.append(
+                "GROQ_API_KEY is not set. Live calls won't be checked for scams; demo calls use scripted verdicts."
+            )
 
         if not 0 <= self.risk_yellow_threshold < self.risk_red_threshold <= 100:
             errors.append(

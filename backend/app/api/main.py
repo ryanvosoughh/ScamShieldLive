@@ -23,6 +23,7 @@ def create_app(
     settings: Settings | None = None,
     stt_factory=make_stt,
     analyzer_factory=ScamAnalyzer.from_settings,
+    demo_speed: float = 1.0,
 ) -> FastAPI:
     logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(name)s: %(message)s")
     settings = settings or load_or_exit()
@@ -32,6 +33,7 @@ def create_app(
     app.state.stt_factory = stt_factory
     # One analyser for the whole app, so calls reuse its connection to Groq.
     app.state.analyzer = analyzer_factory(settings)
+    app.state.demo_speed = demo_speed  # 1.0 plays demo calls in real time; tests go faster
 
     @app.get("/health")
     def health() -> dict:
