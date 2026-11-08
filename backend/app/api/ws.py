@@ -5,8 +5,10 @@ Messages from the browser:
   {"type": "stop"}     the user pressed Stop
 
 Messages to the browser (all JSON):
-  {"type": "ready"}                                  transcription is connected; start sending audio
+  {"type": "ready", "analysis"}                      transcription is connected; start sending audio.
+                                                     analysis is false when there is no Groq key
   {"type": "transcript", "text", "is_final", ...}    live text
+  {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check
   {"type": "error", "code", "message"}               something failed; message is user-friendly
   {"type": "ended"}                                  the call is over; the server then closes
 """
@@ -20,6 +22,8 @@ from typing import Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
+from app.analysis import TranscriptWindow
+from app.scoring import RiskScorer
 from app.session import CallSession, SendFn
 from app.stt import SAMPLE_RATE, STTError
 
@@ -36,14 +40,22 @@ async def call_socket(websocket: WebSocket) -> None:
     send = _make_sender(websocket)
 
     try:
-        session = CallSession(stt=stt_factory(settings), send=send)
+        session = CallSession(
+            stt=stt_factory(settings),
+            send=send,
+            analyzer=websocket.app.state.analyzer,  # shared by all calls; None without a Groq key
+            scorer=RiskScorer.from_settings(settings),
+            window=TranscriptWindow(window_seconds=settings.window_seconds),
+            check_interval=settings.analysis_interval_seconds,
+            checks_per_minute=settings.checks_per_minute,
+        )
         await session.start()
     except STTError as exc:
         await send({"type": "error", "code": "stt_unavailable", "message": str(exc)})
         await _close(websocket)
         return
 
-    await send({"type": "ready", "sample_rate": SAMPLE_RATE})
+    await send({"type": "ready", "sample_rate": SAMPLE_RATE, "analysis": session.analysis_on})
     try:
         await _receive_until_stop(websocket, session)
     except STTError as exc:

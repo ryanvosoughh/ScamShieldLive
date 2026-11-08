@@ -43,3 +43,11 @@ def test_thresholds_must_be_ordered():
 def test_keys_never_appear_in_repr():
     settings = Settings.from_env({"DEEPGRAM_API_KEY": "secret-dg", "GROQ_API_KEY": "secret-groq"})
     assert "secret" not in repr(settings)
+
+
+def test_check_spacing_defaults_and_limits():
+    settings = Settings.from_env({"DEMO_MODE": "true"})
+    assert settings.analysis_interval_seconds == 4.0
+    assert settings.checks_per_minute == 5
+    with pytest.raises(ConfigError, match="CHECKS_PER_MINUTE"):
+        Settings.from_env({"DEMO_MODE": "true", "CHECKS_PER_MINUTE": "0"}).validate()

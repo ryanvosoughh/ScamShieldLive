@@ -94,6 +94,10 @@ function onServerMessage(current, message) {
       showError(message.message);
       current.source.stop();
       break;
+    case "state":
+      // The risk meter that shows this arrives in Phase 2G; for now it is only logged.
+      console.debug("Risk state:", message.level, message.score, message.reason);
+      break;
     case "ended":
       finish(current, current.error);
       break;

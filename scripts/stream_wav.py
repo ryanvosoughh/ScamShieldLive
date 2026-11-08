@@ -61,6 +61,7 @@ class Run:
         self.final_lags: list[float] = []
         self.interim_lags: list[float] = []
         self.final_lines: list[str] = []
+        self.states: list[dict] = []  # risk updates from the scam check
         self.error: str | None = None
 
     def lag(self, text_end: float) -> float | None:
@@ -115,6 +116,11 @@ async def _receive(socket, run: Run) -> None:
         if kind == "error":
             run.error = message.get("message", "unknown error")
             continue
+        if kind == "state":
+            run.states.append(message)
+            score = "n/a" if message["score"] is None else f"{message['score']:.0f}"
+            print(f"  >> risk {message['level'].upper()} ({score}, {message['scam_type']}): {message['reason']}")
+            continue
         if kind != "transcript" or not message.get("text"):
             continue
 
@@ -157,6 +163,10 @@ def main() -> int:
     print()
     print(f"  Interim text delay: {_describe(run.interim_lags)}")
     print(f"  Final text delay:   {_describe(run.final_lags)}")
+    if run.states:
+        print(f"  Risk updates:       {len(run.states)}, last: {run.states[-1]['level'].upper()}")
+    else:
+        print("  Risk updates:       none (no Groq key, or too little speech)")
     if run.error:
         print(f"\n  Error from the server: {run.error}\n", file=sys.stderr)
         return 1

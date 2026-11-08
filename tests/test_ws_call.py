@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.api.main import create_app
 from app.config import Settings
-from app.models import TranscriptSegment
+from app.models import TextSignal, TranscriptSegment
 from app.stt import SpeechToTextClient, STTError
 
 CHUNK = b"\x00\x00" * 1600  # 100 ms of silence
@@ -93,3 +93,42 @@ def test_demo_mode_explains_it_is_not_built_yet():
         message = ws.receive_json()
     assert message["type"] == "error"
     assert "Phase 2" in message["message"]
+
+
+class ScamSTT(FakeSTT):
+    """Hears one long scam sentence on the first chunk."""
+
+    async def send_audio(self, chunk):
+        self.chunks += 1
+        if self.chunks == 1:
+            text = "Hi Nana it's me, I need bail money today, please don't tell Mum."
+            await self._emit_transcript(TranscriptSegment(text, True, 0.0, 3.0, 0.9))
+
+    async def close(self):
+        self.closed = True
+
+
+class RedAnalyzer:
+    async def analyze(self, text):
+        return TextSignal(risk=90, scam_type="grandchild", reason="Money and secrecy.", next_action="Hang up.")
+
+
+def test_speech_leads_to_a_risk_state_in_the_browser():
+    settings = Settings.from_env({"DEEPGRAM_API_KEY": "test"})
+    app = create_app(settings, stt_factory=lambda _s: ScamSTT(), analyzer_factory=lambda _s: RedAnalyzer())
+    with TestClient(app).websocket_connect("/ws/call") as ws:
+        ready = ws.receive_json()
+        assert ready["type"] == "ready" and ready["analysis"] is True
+        ws.send_bytes(CHUNK)
+        assert ws.receive_json()["type"] == "transcript"
+        state = ws.receive_json()
+        assert state["type"] == "state"
+        assert state["level"] == "red"
+        assert state["reason"] == "Money and secrecy."
+        ws.send_json({"type": "stop"})
+        assert ws.receive_json()["type"] == "ended"
+
+
+def test_without_a_groq_key_the_browser_is_told_analysis_is_off():
+    with make_client(FakeSTT()).websocket_connect("/ws/call") as ws:
+        assert ws.receive_json()["analysis"] is False

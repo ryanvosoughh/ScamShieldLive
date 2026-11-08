@@ -36,6 +36,7 @@ class Settings:
     risk_yellow_threshold: int
     risk_red_threshold: int
     analysis_interval_seconds: float
+    checks_per_minute: int
     window_seconds: float
     host: str
     port: int
@@ -61,6 +62,7 @@ class Settings:
             risk_yellow_threshold=reader.integer("RISK_YELLOW_THRESHOLD", 40),
             risk_red_threshold=reader.integer("RISK_RED_THRESHOLD", 70),
             analysis_interval_seconds=reader.number("ANALYSIS_INTERVAL_SECONDS", 4.0),
+            checks_per_minute=reader.integer("CHECKS_PER_MINUTE", 5),
             window_seconds=reader.number("WINDOW_SECONDS", 30.0),
             host=reader.text("HOST", "127.0.0.1"),
             port=reader.integer("PORT", 8000),
@@ -89,6 +91,8 @@ class Settings:
             )
         if self.analysis_interval_seconds <= 0:
             errors.append("ANALYSIS_INTERVAL_SECONDS must be greater than 0.")
+        if self.checks_per_minute < 1:
+            errors.append("CHECKS_PER_MINUTE must be at least 1.")
         if self.window_seconds < self.analysis_interval_seconds:
             errors.append("WINDOW_SECONDS must be at least ANALYSIS_INTERVAL_SECONDS.")
         if not 1 <= self.port <= 65535:
