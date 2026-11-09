@@ -140,6 +140,23 @@ h2 {
   font-weight: 500;
 }
 
+/* Only notices: the call is still going, so no alarm colours. Blue, so it
+   can't be mistaken for the yellow or red of the risk meter. */
+.banner--notice {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+
+.banner__item {
+  margin: 0;
+}
+
+.banner__item + .banner__item {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
 .controls {
   display: flex;
   flex-wrap: wrap;

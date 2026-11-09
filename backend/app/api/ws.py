@@ -14,6 +14,9 @@ Messages to the browser (all JSON):
                                                      demo describes the scripted call, or is null
   {"type": "transcript", "text", "is_final", ...}    live text
   {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check
+  {"type": "notice", "code", "message"}              a problem that doesn't stop the call, e.g. the
+                                                     scam check isn't answering or no words are
+                                                     recognised; message null takes it down again
   {"type": "error", "code", "message"}               something failed; message is user-friendly
   {"type": "ended"}                                  the call is over (Stop, or the demo script
                                                      finished); the server then closes

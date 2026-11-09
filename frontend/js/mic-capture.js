@@ -83,7 +83,11 @@ function describeMicError(err) {
   switch (err?.name) {
     case "NotAllowedError":
     case "SecurityError":
-      return "Microphone access was blocked. Allow it from the icon in the address bar, or use an audio file instead.";
+      // Chrome says "Permission denied by system" when the computer, not the page, is blocking it.
+      if (/system/i.test(err.message || "")) {
+        return "Your computer is stopping the browser from using the microphone. On a Mac, open System Settings, then Privacy & Security, then Microphone, and turn your browser on. Then press Start listening again.";
+      }
+      return "Microphone access is blocked for this page. Click the icon at the left of the address bar, allow the microphone, then press Start listening again. An audio file or a demo call works without it.";
     case "NotFoundError":
     case "OverconstrainedError":
       return "No microphone was found. Plug one in, or use an audio file instead.";

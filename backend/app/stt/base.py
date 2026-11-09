@@ -14,6 +14,7 @@ from app.models import TranscriptSegment
 
 TranscriptCallback = Callable[[TranscriptSegment], Awaitable[None]]
 ErrorCallback = Callable[[str], Awaitable[None]]
+NoticeCallback = Callable[[str, "str | None"], Awaitable[None]]
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class SpeechToTextClient(ABC):
     def __init__(self) -> None:
         self._transcript_callback: TranscriptCallback | None = None
         self._error_callback: ErrorCallback | None = None
+        self._notice_callback: NoticeCallback | None = None
         # Set by a source that ends on its own (a replayed demo call). A live
         # call never sets it: it ends when the person presses Stop.
         self.finished = asyncio.Event()
@@ -45,6 +47,14 @@ class SpeechToTextClient(ABC):
         own background connection have no caller to raise into, so they need a callback.
         """
         self._error_callback = callback
+
+    def on_notice(self, callback: NoticeCallback) -> None:
+        """Register who hears about problems that don't stop the call.
+
+        The callback gets a code and a user-friendly message, or the code and
+        None when the problem has gone away (e.g. "no words recognised").
+        """
+        self._notice_callback = callback
 
     @abstractmethod
     async def connect(self) -> None:
@@ -66,3 +76,8 @@ class SpeechToTextClient(ABC):
         logger.warning("STT error: %s", message)
         if self._error_callback is not None:
             await self._error_callback(message)
+
+    async def _emit_notice(self, code: str, message: str | None) -> None:
+        logger.info("STT notice %s: %s", code, message or "cleared")
+        if self._notice_callback is not None:
+            await self._notice_callback(code, message)

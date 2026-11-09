@@ -24,10 +24,11 @@ class SilentSTT(SpeechToTextClient):
 
 
 class FakeAnalyzer:
-    def __init__(self, risk=90, delay=0.0, signal=None):
+    def __init__(self, risk=90, delay=0.0, signal=None, signals=None):
         self.risk = risk
         self.delay = delay
         self.signal = signal
+        self.signals = list(signals or [])  # given out one per check, before falling back to signal/risk
         self.texts = []  # what each check was given
         self.started = []  # when each check started
         self.running = 0
@@ -42,6 +43,8 @@ class FakeAnalyzer:
             await asyncio.sleep(self.delay)
         finally:
             self.running -= 1
+        if self.signals:
+            return self.signals.pop(0)
         return self.signal or TextSignal(
             risk=self.risk,
             scam_type="grandchild",
@@ -192,6 +195,52 @@ def test_a_failed_check_sends_unknown_not_safe():
     [state] = states(sent)
     assert state["level"] == "unknown"
     assert state["breakdown"][0] == "Words: no result (Groq rate limit reached)"
+
+
+FAILED = TextSignal.unknown("Groq rate limit reached")
+ANSWERED = TextSignal(risk=10, scam_type="none", reason="Small talk.", next_action="No action needed.")
+
+
+def notices(sent):
+    return [(m["code"], m["message"]) for m in sent if m["type"] == "notice"]
+
+
+def check_each_line(analyzer, lines):
+    """One check per line, each on new speech."""
+
+    async def scenario(session):
+        for n in range(lines):
+            await session.on_transcript(final(f"{SCAM_LINE} Line {n}.", 3 * n, 3 * n + 3))
+            await asyncio.sleep(0.03)
+
+    return run_call(scenario, analyzer, interval=0.0)
+
+
+def test_one_failed_check_shows_on_the_meter_but_raises_no_banner():
+    _, sent = check_each_line(FakeAnalyzer(signals=[FAILED, ANSWERED]), 2)
+    assert notices(sent) == []
+
+
+def test_two_failed_checks_in_a_row_raise_the_banner_once_with_the_reason():
+    _, sent = check_each_line(FakeAnalyzer(signals=[FAILED, FAILED, FAILED]), 3)
+    [(code, message)] = notices(sent)
+    assert code == "analysis_unavailable"
+    assert message.startswith("The scam check isn't answering")
+    assert message.endswith("(Groq rate limit reached)")
+
+
+def test_the_banner_comes_down_when_a_check_answers_again():
+    session, sent = check_each_line(FakeAnalyzer(signals=[FAILED, FAILED, ANSWERED]), 3)
+    assert [message is None for _, message in notices(sent)] == [False, True]
+    assert session.checks == 3
+
+
+def test_notices_from_speech_to_text_reach_the_browser():
+    async def scenario(session):
+        await session._stt._emit_notice("no_words", "Speech is coming through, but no words are being recognised.")
+
+    _, sent = run_call(scenario)
+    assert notices(sent) == [("no_words", "Speech is coming through, but no words are being recognised.")]
 
 
 def test_ending_the_call_stops_a_check_in_flight():

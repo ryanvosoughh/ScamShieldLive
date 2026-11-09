@@ -18,6 +18,7 @@ from websockets.exceptions import ConnectionClosed, InvalidHandshake, InvalidSta
 
 from app.models import TranscriptSegment
 from app.stt.base import SAMPLE_RATE, SpeechToTextClient, STTError
+from app.stt.no_words import NO_WORDS_CODE, NO_WORDS_MESSAGE, SpeechWithoutWords
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class DeepgramSTT(SpeechToTextClient):
         self._keepalive: asyncio.Task[None] | None = None
         self._last_audio_at = 0.0
         self._closing = False
+        self._no_words = SpeechWithoutWords()
 
     def build_url(self) -> str:
         params = {
@@ -50,6 +52,7 @@ class DeepgramSTT(SpeechToTextClient):
             "interim_results": "true",  # fast partial text while the person is still talking
             "smart_format": "true",  # punctuation, numbers as digits
             "endpointing": 300,  # ms of silence before a phrase is finalised
+            "vad_events": "true",  # SpeechStarted events, to spot speech that gives no words
         }
         return f"{DEEPGRAM_URL}?{urlencode(params)}"
 
@@ -111,9 +114,17 @@ class DeepgramSTT(SpeechToTextClient):
                 except json.JSONDecodeError:
                     logger.warning("Ignoring non-JSON message from Deepgram")
                     continue
+                if message.get("type") == "SpeechStarted":
+                    self._no_words.speech_started()
+                    continue
                 segment = parse_message(message)
-                if segment is not None:
-                    await self._emit_transcript(segment)
+                if segment is None:
+                    continue
+                if segment.is_final:
+                    change = self._no_words.final(segment.text)
+                    if change is not None:
+                        await self._emit_notice(NO_WORDS_CODE, NO_WORDS_MESSAGE if change else None)
+                await self._emit_transcript(segment)
         except ConnectionClosed as exc:
             if not self._closing:
                 await self._emit_error(_describe_close(exc))
@@ -142,7 +153,7 @@ def parse_message(message: dict[str, Any]) -> TranscriptSegment | None:
     grey interim guess when Deepgram decides the sound was not speech.
     """
     if message.get("type") != "Results":
-        return None  # Metadata, SpeechStarted, UtteranceEnd: not needed yet
+        return None  # Metadata, UtteranceEnd; SpeechStarted is handled by the receive loop
     alternatives = (message.get("channel") or {}).get("alternatives") or []
     if not alternatives:
         return None
