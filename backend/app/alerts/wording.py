@@ -48,7 +48,7 @@ WORDING: dict[Persona, dict[RiskLevel, AlertLines]] = {
         RiskLevel.UNKNOWN: AlertLines(
             screen="Couldn't check the call",
             spoken="The scam check isn't working right now. "
-            "Be careful with any request for money or codes.",
+            "Don't send money or share any codes on this call.",
         ),
     },
     Persona.GRAN: {
