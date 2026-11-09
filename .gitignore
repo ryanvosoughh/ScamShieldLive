@@ -4,7 +4,8 @@
 !.env.example
 
 # Python
-.venv/
+# .venv is a real folder, or a link to an environment kept outside iCloud
+.venv
 __pycache__/
 *.py[cod]
 .pytest_cache/
