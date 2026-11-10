@@ -37,6 +37,11 @@ def test_system_prompt_says_politeness_is_not_safety():
     assert "A pleasant tone doesn't make a request safe" in SYSTEM_PROMPT
 
 
+def test_system_prompt_asks_for_the_risk_in_digits():
+    # The model once wrote "thirty", and Groq's strict JSON check threw the whole answer away.
+    assert "written in digits" in SYSTEM_PROMPT
+
+
 def test_every_lookalike_is_in_the_prompt_and_the_list_is_not_treated_as_complete():
     for example in LOOKALIKES:
         assert example in SYSTEM_PROMPT
