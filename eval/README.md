@@ -1,11 +1,11 @@
 # Evaluation test set
 
-`cases.json` holds 24 short phone-call transcripts, each labelled **scam** or **normal**, for a smoke test of the scam check. Text only: no audio and no speech recognition.
+`cases.json` holds 29 short phone-call transcripts, each labelled **scam** or **normal**, for a smoke test of the scam check. Text only: no audio and no speech recognition.
 
 ## How a case is scored
 
 ```
-.venv/bin/python eval/run_eval.py             # all cases, about 5 minutes; saves eval/results.json
+.venv/bin/python eval/run_eval.py             # all cases, about 6 minutes; saves eval/results.json
 .venv/bin/python eval/run_eval.py --limit 3   # a quick try on 3 cases; saves nothing
 .venv/bin/python eval/time_to_warning.py      # the 3 demo calls in real time, about 3 minutes; saves eval/timing.json
 .venv/bin/python eval/make_report.py          # writes eval/results.md from those files; no Groq calls
@@ -29,7 +29,7 @@ The level is what the risk meter would show, not the model's raw risk number: a 
 
 ## How the cases were made
 
-- **Who and when:** drafted by me and Claude Code on 10 Nov 2026 at my request, so every case says `"source": "claude-drafted"` and "hand-written". I chose the scam types and the look-alikes to include; Claude wrote the wording. 
+- **Who and when:** Claude Code drafted the first 24 cases on 10 Nov 2026 at my request. I chose the scam types and the look-alikes to include. I then reworded 17 of them and wrote further scam cases myself, including ones without the usual red-flag words. Each case's `source` says which it is: `claude-drafted` (7 cases) or `hand-written` (the rest).
 - **Length:** 80 words at most, about 30 seconds of speech. That is the size of the live check's window, so one check on the whole case sees what the live check would see.
 - **Style:** written the way speech recognition writes a call: no speaker names, and sometimes both sides mixed together. Two cases (`s12`, `n12`) have no punctuation and misheard words, like raw transcripts. UK English.
 - **People and places** are invented. A company is named only where a scam pretends to be it (`s05`, Microsoft).
@@ -41,7 +41,7 @@ If you rewrite a case yourself, set its `source` to `hand-written` and add a lin
 
 ## What is in the set
 
-**12 scams:** grandchild 3, bank 2, tech support 2, romance 2, prize 2, other 1. Four are calm and polite (`s02`, `s04`, `s07`, `s10`).
+**17 scams:** grandchild 3, bank 2, tech support 2, romance 2, prize 4, other 4. Seven are calm and polite (`s02`, `s04`, `s07`, `s10`, `s13`, `s16`, `s17`). Five (`s13` to `s17`, tagged `no_red_flag_words`) avoid every red-flag word, so the model has to spot them without the scorer's safety net.
 
 | Case | Why it is there |
 |---|---|
@@ -57,6 +57,11 @@ If you rewrite a case yourself, set its `source` to `hand-written` and add a lin
 | `s10_prize_refund_fee_polite` | A calm refund with a fee and "don't tell your family or bank" |
 | `s11_other_tax_arrest_threat` | A scam outside the five types: a tax-office arrest threat |
 | `s12_grandchild_asr_errors` | Raw speech-recognition text, both sides, the person pushing back |
+| `s13_rebate_identity_details` | A "council rebate" that only asks for a date of birth and National Insurance number |
+| `s14_parcel_fee_by_link` | A small parcel fee paid through a texted link, today |
+| `s15_energy_cut_off_threat` | Electricity cut off at four unless a debt is paid by debit card now |
+| `s16_pension_review_polite` | A friendly "adviser" moving a pension into a high-return scheme before Friday |
+| `s17_loyalty_discount_card_number` | Half-price bills if you read out your card number and expiry date |
 
 **12 normal calls:** 10 look-alikes that share words or worries with scams, and 2 plain calls.
 
@@ -78,8 +83,9 @@ If you rewrite a case yourself, set its `source` to `hand-written` and add a lin
 ## Limits
 
 - **Text only.** Phone-line audio, accents, noise and speech-recognition mistakes (beyond two cases) are not tested.
-- **Small.** 24 cases is a smoke test: with 12 scams, one case moves the catch rate by about 8 points.
+- **Small.** 29 cases is a smoke test: with 17 scams, one case moves the catch rate by about 6 points.
 - **Hard on purpose.** 10 of the 12 normal calls are look-alikes, so the false-alarm rate will look worse than it would on everyday calls.
 - **Whole ask in 30 seconds.** Every case contains the full request, so it doesn't measure how early a warning comes in a longer call. The demo calls cover that.
 - **Two labels only.** A case is scam or normal; there is no expected yellow or red.
 
+| 10 Nov 2026 | Added 5 scams that avoid every red-flag word (`s13` to `s17`), drafted by me, after the first run. The first run's 24-case results are in git history (commit `1ab4130`) |

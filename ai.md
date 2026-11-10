@@ -23,7 +23,7 @@ I was new to voice AI, so I used Claude as a tutor as well as a coder. I asked i
 
 - **Most of the code**, one step at a time from my plan: the server, the Deepgram streaming client, the transcript window, the Groq scam check, the scorer, the alert wording, the browser page and the tests (about 150).
 - **The first draft of the scam-check prompt** (`backend/app/analysis/prompts.py`), which I then changed after testing.
-- **The 24 evaluation calls** (`eval/cases.json`). Every one says `"source": "claude-drafted"`, and I wrote that down in `eval/README.md` and the README as a limit, because one writer makes the test tidier than real calls.
+- **The first draft of the 24 evaluation calls** (`eval/cases.json`). I then reworded most of them myself: 17 of the 24 are now labelled `"source": "hand-written"` and 7 are still Claude's wording (`"claude-drafted"`). I also wrote new scam cases myself that avoid the obvious red-flag words, to test whether the check relies on those words. The single-author limit is smaller than it was, but it is not gone, and I say so in the README.
 - **The first draft of the evaluation scripts and reports** (`eval/run_eval.py`, `eval/make_report.py`, `eval/results.md`).
 - **Commit messages and comments** were drafted by Claude in my voice and edited by me.
 

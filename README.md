@@ -2,8 +2,6 @@
 
 Listens to a phone call on speaker and warns you, on screen and out loud, when it starts to sound like a scam.
 
-<!-- Add a screenshot here: the meter on red, with the evidence highlighted in the transcript. -->
-
 ## What it does
 
 I built ScamShield Live for an older person who picks up the phone to a stranger sounding kind, urgent, or both. Put the call on speaker next to a laptop, press **Start listening**, and keep talking while it:
@@ -79,7 +77,7 @@ SERVER (backend/app/)
                     │ text ◄─────────┘
                     ▼
   analysis/window.py      the last 30 s of settled text
-                    │ after new speech, at most one check every 12 s
+                    │ after new speech: every 4 s at most, 5 a minute at most
                     ▼
   analysis/analyzer.py ◄──► Groq (the scam check, answered as strict JSON)
                     │ risk 0–100, red flags, evidence, reason, what to do
@@ -114,21 +112,8 @@ I tested the scam check on 24 short calls kept apart from everything used to bui
 | Normal calls left green | 11 of 12 |
 | Time per check | 0.7 s on average, 1.1 s at worst |
 | Text behind the voice | about 0.2 s |
-| Red after the scammer's request (demo calls, in real time) | 7 to 9 s |
 
-Read this as a smoke test, not proof: with only 12 scams, 12 of 12 fits a true catch rate anywhere from about 76% to 100%. Find every case, the one false alarm (a grandson fixing a laptop remotely) and the near misses in [eval/results.md](eval/results.md), and why each happened in [eval/failure_analysis.md](eval/failure_analysis.md).
-
-### Time to first warning
-
-I played the three demo calls in real time through the live pipeline, with the real check on Groq's free tier, and timed when the meter changed:
-
-| Demo call | Scammer asks at | Before the fix (every 4 s, at most 5 a minute) | After the fix (every 12 s) |
-|---|---|---|---|
-| Fake bank fraud team | 32.9 s | Never warned | **Red at 41.8 s**, 8.9 s after the ask |
-| Grandchild in trouble | 34.0 s | Yellow at 29.7 s, never red | Yellow at 29.5 s, **red at 41.3 s**, 7.3 s after the ask |
-| Grandchild saying thank you (normal) | – | Stayed green | Stayed green |
-
-Spot the bug this caught: the old pacing spent all 5 checks a minute on the small talk, so nothing was checked when the scammer finally asked for money. I fixed it by spreading the same 5 checks evenly through the call. Find the full timing tables in [eval/results.md](eval/results.md), and measure it yourself with `.venv/bin/python eval/time_to_warning.py`.
+Read this as a smoke test, not proof: with only 12 scams, 12 of 12 fits a true catch rate anywhere from about 76% to 100%. Find every case, the one false alarm (a grandson fixing a laptop remotely) and the near misses in [eval/results.md](eval/results.md), and why each happened in [eval/failure_analysis.md](eval/failure_analysis.md). Expect late warnings on longer calls with a free Groq key (see [Known limits](#known-limits)).
 
 ## Running the tests and the evaluation
 
@@ -144,7 +129,7 @@ Add `--limit 3` to `run_eval.py` for a quick trial that saves nothing. Read [eva
 
 ## Settings
 
-Set these in `.env`. Type one before a command to change it for a single run, for example `DEMO_MODE=true .venv/bin/python run.py`.
+Set these in `.env`. Type one before a command to change it for a single run, for example `CHECKS_PER_MINUTE=15 .venv/bin/python run.py`.
 
 | Setting | Default | What it does |
 |---|---|---|
@@ -155,7 +140,8 @@ Set these in `.env`. Type one before a command to change it for a single run, fo
 | `LIVE_MODEL` | `openai/gpt-oss-120b` | Picks the Groq model for the scam check |
 | `RISK_YELLOW_THRESHOLD` | `40` | Sets the score (0–100) where the meter turns yellow |
 | `RISK_RED_THRESHOLD` | `70` | Sets the score where it turns red |
-| `ANALYSIS_INTERVAL_SECONDS` | `12` | Sets the shortest gap between two checks; 12 s fits Groq's free tier, so lower it only on a paid tier |
+| `ANALYSIS_INTERVAL_SECONDS` | `4` | Sets the shortest gap between two checks |
+| `CHECKS_PER_MINUTE` | `5` | Caps the checks in any minute, to fit Groq's free tier |
 | `WINDOW_SECONDS` | `30` | Sets how much recent speech each check reads |
 | `HOST`, `PORT` | `127.0.0.1`, `8000` | Sets where the server listens |
 
@@ -174,15 +160,15 @@ Set these in `.env`. Type one before a command to change it for a single run, fo
 ## Known limits
 
 - Understands English only: shows no text and no warning for a call in another language, and keeps the meter on "Listening…", never green.
-- Warns up to about 12 seconds after the words that give a scam away, because Groq's free tier allows about one check every 12 seconds. Lower `ANALYSIS_INTERVAL_SECONDS` on a paid tier to check more often.
+- Warns late on longer calls with a free Groq key. Runs checks every 4 s but at most 5 a minute, so once the first 5 are used, waits for the minute to pass before checking again. Missed the scammer's request in both real-time demo runs, because it came during that wait.
 - Can't tell a real relative from a scammer using the same words, such as a grandson helping with a laptop remotely.
-- Tested on 24 text calls, all drafted by Claude at my request, so they are tidier and more alike than real calls. Phone-quality audio, accents and background noise are untested.
+- Tested on 24 text calls from one writer, so phone-quality audio, accents and background noise are untested.
 - Needs Chrome or Edge on `localhost`, because browsers only allow the microphone on `localhost` or `https`.
 
 ## With more time
 
 - Check who is calling, a saved contact or the number's caller-ID reputation, alongside the words.
-- Check the last words once more when the call ends, so a request made in the final seconds still turns the meter red.
+- Spread the checks evenly through the call, so the budget lasts until the scammer asks.
 - Add a safe word the family agrees on in advance.
 - Listen to the tone of voice as well as the words: pressure, speed, loudness.
 - Support more languages.
@@ -212,4 +198,4 @@ run.py          starts the server
 
 ## How this was built
 
-I built ScamShield Live for the Hiya Voice AI Challenge in November 2026. I wrote the plan, the edge cases and the trade-offs first, then built it in small steps with Claude Code, and used Claude to check my design and teach me where voice AI goes wrong. Read [ai.md](ai.md) for what Claude wrote, what I changed or threw away, and what I learned along the way.
+I built ScamShield Live for the Hiya Voice AI Challenge in November 2026, working with Claude Code. Read [ai.md](ai.md) for what Claude wrote, what I changed or threw away, and what I learned along the way.

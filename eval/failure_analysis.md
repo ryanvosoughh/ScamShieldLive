@@ -8,7 +8,7 @@ if they are run again:
 
 | Run | When (UTC) | Prompt | Code |
 |---|---|---|---|
-| 24 test cases (`results.json`) | 10 Nov 2026, 13:59 | `0e65300ae02f` | `a1ec0c1` |
+| 29 test cases (`results.json`) | 10 Nov 2026, 21:36 | `0e65300ae02f` | `01103fd` |
 | Demo-call timing before the pacing fix (`timing_baseline.json`) | 10 Nov 2026, 14:50 | `0e65300ae02f` | `1ab4130` |
 | Demo-call timing after the pacing fix (`timing.json`) | 10 Nov 2026, 21:01 | `0e65300ae02f` | `ce6b9d0` plus the fix, before it was committed |
 
@@ -20,9 +20,11 @@ if they are run again:
 |---|---|---|---|
 | `n06_grandson_fixes_laptop` | False alarm | A signal outside the words: is the caller a saved contact? | Keep the label, accept the false alarm |
 | `s04_bank_safe_account_polite` | Near miss | Already handled: the red-flag rule in the scorer | No change; add more polite cases |
+| `s13_rebate_identity_details` | **Missed** | Make identity details a warning sign: a red flag, or a rule in the risk scale | Not fixed yet; a known limit |
+| `s16_pension_review_polite`, `s17_loyalty_discount_card_number` | Near misses | The model stretched a red flag to fit; the definitions need widening on purpose | Not changed yet |
 | Demo calls with a Groq key | Late or missing warnings | Spread the checks through the call | **Fixed:** one check every 12 s; red 7 to 9 s after the ask |
 
-No scam in the 24 cases was missed.
+One scam in 17 was missed: `s13`. The first 24 cases gave the same results as before the five new scams were added.
 
 ## 1. False alarm: the grandson fixing a laptop (`n06`)
 
@@ -85,7 +87,7 @@ app allows checks every 4 s but at most 5 a minute. All 5 were used up on the sm
 before then, so the request itself, the part that turns the meter red, was never checked. Scams
 usually build up first and ask later, so this is the worst moment to stop checking.
 
-The 24 test cases couldn't show this, because each one is a single check on a short call. Without a
+The single-check test cases couldn't show this, because each one is a single check on a short call. Without a
 Groq key the demo calls use scripted verdicts, which have no cap, so the keyless demo isn't affected.
 
 **What would fix it.** I compared four options:
@@ -113,12 +115,51 @@ It used 11 checks instead of 15, and none failed. What is left: a warning can st
 12 seconds after the words that give a scam away, plus the second or so a check takes. A paid Groq
 tier could check more often by lowering `ANALYSIS_INTERVAL_SECONDS`.
 
+## 4. Missed: the "council rebate" that only asks for identity details (`s13`)
+
+**What happened.** A "council revenue team" says you're owed a rebate, but first wants your full name,
+date of birth and National Insurance number. The meter stayed green: model risk 30, no red flags.
+The model's own reason was right, *"They are asking for personal details you should not give over
+the phone"*, but its number sat just under the yellow line of 40, and the meter only shows the reason
+for yellow or red. So the person would have seen "No warning signs so far" and never that sentence.
+
+**Why.** The prompt describes scams as money, urgency and secrecy, and every red flag is about money,
+codes or access. This call asks for no money yet: it collects identity details first, which real
+scams do so they can open accounts or pass security checks later.
+
+**What would fix it.** Make identity details a warning sign in their own right: a sixth red flag such
+as "asks for identity numbers (National Insurance, passport, full date of birth) on a call you didn't
+expect", or a line in the risk scale that puts it at yellow or above. It needs careful wording,
+because the GP surgery case (`n04`) asks for a date of birth and is genuine. Either change means
+running every case again and reporting before and after.
+
+**Decision.** Not fixed yet. It is listed as a known limit in the README.
+
+## 5. Near misses, and red flags stretched to fit (`s14` to `s17`)
+
+**What happened.** The other four scams written without red-flag words were all caught, but not the
+way the prompt describes. The model reported a red flag in each one by stretching its meaning: a card
+payment by link or over the phone (`s14`, `s15`) and reading out a card number (`s17`) were reported
+as `unusual_payment`, which the prompt defines as gift cards, crypto, a wire transfer or a courier,
+and a pension "scheme" (`s16`) was reported as a `safe_account`. Two of them would have been yellow
+without the stretch: `s16` got a risk of 45 and `s17` 55.
+
+**Why it matters.** It helped here, but it means the safety net is looser than written. The same
+stretch could turn a genuine card payment, such as a real energy company taking a payment you asked to
+make, into a red warning. None of the normal calls tests that yet.
+
+**What would fix it.** Widen the red-flag definitions on purpose, so the behaviour is written down
+rather than improvised, and add look-alike normal calls with genuine card payments to measure the
+false alarms that might cause.
+
+**Decision.** Not changed yet.
+
 ## How far to trust these numbers
 
-- **A smoke test, n = 24.** 12 of 12 scams caught is consistent with a true catch rate anywhere from
-  about 76% to 100%, and 1 false alarm in 12 with anything from about 1.5% to 35% (95% Wilson
-  intervals). One more case either way moves a rate by about 8 points.
+- **A smoke test, n = 29.** 16 of 17 scams caught is consistent with a true catch rate anywhere from
+  about 73% to 99%, and 1 false alarm in 12 with anything from about 1.5% to 35% (95% Wilson
+  intervals). One more case either way moves the catch rate by about 6 points.
 - **Text only.** Phone audio, accents, noise and speech-recognition mistakes (beyond two cases) were
-  not tested by the 24 cases.
+  not tested by the 29 cases.
 - **Look-alikes on purpose.** 10 of the 12 normal calls were chosen to be hard, so the false-alarm
   rate is likely worse than on everyday calls.

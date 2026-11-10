@@ -134,7 +134,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A delivery call: a parcel and a stranger, but nothing to pay.",
     "text": "Hi, it's the delivery driver with your parcel from the garden centre. I knocked but there was no answer, so I've left it with your neighbour at number twelve. It's all paid for, nothing to sign. If you'd rather I bring it back tomorrow, just let me know, otherwise she said to pop round whenever you like. Have a good afternoon."
@@ -144,7 +144,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike", "urgent"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A real emergency: urgent and worrying, but no money, codes or secrecy.",
     "text": "Margaret, it's Pat from next door. Don't panic, but your sister's had a fall in the garden. The ambulance is here and they're taking her to the General. She's talking and she asked me to ring you. Can you get there, or shall I come and pick you up in ten minutes? I've locked her back door and I've got her handbag."
@@ -154,7 +154,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike", "personal_detail", "both_sides"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A GP surgery that asks for a date of birth, which real surgeries do.",
     "text": "Good morning, this is the surgery calling about your blood test results. Before I go on, can you confirm your date of birth for me? Lovely, thank you. The results are all normal, but the doctor would like to see you in three months to check your blood pressure again. Shall I book you in for a morning? Yes, the eighth at ten o'clock. We'll send you a text reminder."
@@ -164,7 +164,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike", "money"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A grandchild asking for money openly: Mum knows, no rush, no secrecy.",
     "text": "Hi Grandpa, it's Ellie. Mum said I should ask you myself. We've got the school trip to the science museum next month and it's thirty pounds. Mum's paying most of it, but she said you offered to help last time. No rush at all, she's going to ring you on Sunday about it anyway. How's your knee? Are you still coming to my concert?"
@@ -174,7 +174,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike", "remote_access", "hard"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A grandson the person asked for help connects to the laptop remotely. Hard: it has the words of a tech-support scam.",
     "text": "Hi Nan, it's Josh. You texted me that the laptop keeps freezing. I can sort it from here like last time. Open the app with the blue icon I put on there and read me the number it shows, then I can see your screen. Don't worry, it's probably just the updates. If it's still slow, I'll come round on Saturday and have a proper look."
@@ -194,7 +194,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike", "scam_words", "hard"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A friend retelling a scam: bail, secrecy and gift cards are all said, but nobody asks this person for anything.",
     "text": "You'll never guess what happened to Brenda. Someone rang her pretending to be her grandson, saying he'd been arrested and needed bail. He told her not to tell anyone and asked for gift cards. Luckily her daughter was there and took the phone off her. Isn't it awful? Anyway, are we still on for the coffee morning on Wednesday? I'll bring the scones."
@@ -204,7 +204,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "A company call about money that tells you to call back on a number you already have.",
     "text": "Hello, I'm calling from your home insurance company. Your policy renews at the end of the month and the price is going up slightly. You don't need to do anything today. We'll post the new documents out, and if you want to talk about it, please call us on the number printed on your policy, so you know it's really us. We won't take any payment on this call."
@@ -224,7 +224,7 @@
     "label": "normal",
     "scam_type": "none",
     "tags": ["lookalike"],
-    "source": "claude-drafted",
+    "source": "hand-written",
     "seen_in_development": false,
     "tests": "An appointment call from a company: a stranger is coming to the house, but nothing to pay.",
     "text": "Good afternoon, this is the broadband company confirming your engineer visit. The engineer will be with you on Tuesday between eight and twelve to fix the line. There's nothing to pay, and they'll show their ID badge at the door. If that time doesn't suit, you can change it on our website or by calling the number on your bill. Thanks, goodbye."
