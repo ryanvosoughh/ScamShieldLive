@@ -16,9 +16,6 @@ Messages to the browser (all JSON):
   {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check, with
                                                      "headline" for its title and "speak", the
                                                      warning to say out loud now (or null)
-  {"type": "notice", "code", "message"}              a problem that doesn't stop the call, e.g. the
-                                                     scam check isn't answering; message null
-                                                     takes it down again
   {"type": "error", "code", "message"}               something failed; message is user-friendly
   {"type": "ended"}                                  the call is over (Stop, or the demo script
                                                      finished); the server then closes

@@ -28,7 +28,7 @@ from typing import Any
 
 from app.alerts import Alert, AlertPolicy, lines_for
 from app.analysis import ScamAnalyzer, TranscriptWindow
-from app.models import RiskState, TextSignal, TranscriptSegment
+from app.models import RiskState, TranscriptSegment
 from app.scoring import RiskScorer
 from app.stt import BYTES_PER_SAMPLE, SAMPLE_RATE, SpeechToTextClient
 
@@ -41,15 +41,6 @@ SendFn = Callable[[dict[str, Any]], Awaitable[None]]
 MAX_CHUNK_BYTES = 64 * 1024
 DEFAULT_CHECK_INTERVAL_SECONDS = 4.0
 DEFAULT_CHECKS_PER_MINUTE = 5
-
-# A single failed check (one rate-limit blip) only shows on the risk meter. Two
-# in a row is more likely a real outage, so the page also gets a banner.
-FAILURES_BEFORE_NOTICE = 2
-ANALYSIS_DOWN_CODE = "analysis_unavailable"
-ANALYSIS_DOWN_MESSAGE = (
-    "The scam check isn't answering, so warnings may be late or missing. "
-    "The words are still being written out, and checks carry on as soon as it answers."
-)
 
 
 class CallSession:
@@ -83,8 +74,6 @@ class CallSession:
         self._check_lock = asyncio.Lock()  # never two checks at once
         self._check_times: deque[float] = deque()  # starts of recent checks, oldest first
         self._checks_task: asyncio.Task | None = None
-        self._failures_in_a_row = 0
-        self._analysis_notice_up = False
 
         stt.on_transcript(self.on_transcript)
         stt.on_error(self._on_stt_error)
@@ -156,7 +145,6 @@ class CallSession:
             if alert.spoken:
                 logger.info("Speaking the %s alert", alert.level.value)
             await self._send(state_message(state, alert))  # 2.32
-            await self._track_failures(signal)
             return state
 
     async def end(self) -> None:
@@ -197,24 +185,6 @@ class CallSession:
             # Wait until the oldest check in the window is a minute old.
             wait = max(wait, self._check_times[0] + self.rate_window_seconds - now)
         return max(0.0, wait)
-
-    async def _track_failures(self, signal: TextSignal) -> None:
-        """Banner when the scam check keeps failing; take it down when a check answers."""
-        if not signal.is_unknown:
-            self._failures_in_a_row = 0
-            if self._analysis_notice_up:
-                self._analysis_notice_up = False
-                await self._send_notice(ANALYSIS_DOWN_CODE, None)
-            return
-        self._failures_in_a_row += 1
-        if self._failures_in_a_row >= FAILURES_BEFORE_NOTICE and not self._analysis_notice_up:
-            self._analysis_notice_up = True
-            detail = f" ({signal.error})" if signal.error else ""
-            await self._send_notice(ANALYSIS_DOWN_CODE, ANALYSIS_DOWN_MESSAGE + detail)
-
-    async def _send_notice(self, code: str, message: str | None) -> None:
-        """A problem that doesn't stop the call. message=None takes the notice down again."""
-        await self._send({"type": "notice", "code": code, "message": message})
 
     async def _on_stt_error(self, message: str) -> None:
         await self._send({"type": "error", "code": "stt_failed", "message": message})

@@ -2,13 +2,12 @@
 //
 // Two kinds of message:
 //   error   something stopped the call or the page (mic blocked, server not running)
-//   notice  a problem the call carries on through (the scam check isn't answering).
-//           Calmer colours, and the call keeps going.
+//   notice  something the page works around (no microphone here, but an audio
+//           file or a demo call still works). Calmer colours.
 //
 // Every message has a code. A new message with the same code replaces the old
-// one instead of piling up, and the server can take a notice down by its code.
-// Page messages (an unsupported browser) stay until the page reloads; the rest
-// are cleared when the next call starts.
+// one instead of piling up. Page messages (an unsupported browser) stay until
+// the page reloads; the rest are cleared when the next call starts.
 
 export class ErrorBanner {
   constructor(root) {
@@ -19,10 +18,6 @@ export class ErrorBanner {
   show(code, text, { kind = "error", page = false } = {}) {
     this.messages.set(code, { text, kind, page });
     this.render();
-  }
-
-  clear(code) {
-    if (this.messages.delete(code)) this.render();
   }
 
   // A new call starts clean, apart from problems with the page itself.

@@ -7,8 +7,7 @@
 //          -> connect WebSocket -> server replies "ready" -> source.start()
 //   During -> "transcript" messages fill the transcript; "state" messages move
 //             the risk meter, highlight the evidence and, when the server says
-//             so, speak a warning with the mic paused; "notice" messages put
-//             up (or take down) a banner while the call carries on
+//             so, speak a warning with the mic paused
 //   Stop   -> stop audio, send {"type":"stop"} -> server flushes text, sends "ended"
 //   A demo call also ends by itself when its script is over.
 
@@ -199,11 +198,6 @@ function onServerMessage(current, message) {
       meter.update(message);
       view.setEvidence(message.evidence || []);
       if (message.speak) speech.say(message.speak);
-      break;
-    case "notice":
-      // The call carries on; a notice with no message means the problem has gone.
-      if (message.message) banner.show(message.code, message.message, { kind: "notice" });
-      else banner.clear(message.code);
       break;
     case "error":
       // The server follows every error with "ended", which calls finish().

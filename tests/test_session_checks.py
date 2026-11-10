@@ -202,10 +202,6 @@ FAILED = TextSignal.unknown("Groq rate limit reached")
 ANSWERED = TextSignal(risk=10, scam_type="none", reason="Small talk.", next_action="No action needed.")
 
 
-def notices(sent):
-    return [(m["code"], m["message"]) for m in sent if m["type"] == "notice"]
-
-
 def check_each_line(analyzer, lines):
     """One check per line, each on new speech."""
 
@@ -217,23 +213,11 @@ def check_each_line(analyzer, lines):
     return run_call(scenario, analyzer, interval=0.0)
 
 
-def test_one_failed_check_shows_on_the_meter_but_raises_no_banner():
-    _, sent = check_each_line(FakeAnalyzer(signals=[FAILED, ANSWERED]), 2)
-    assert notices(sent) == []
-
-
-def test_two_failed_checks_in_a_row_raise_the_banner_once_with_the_reason():
-    _, sent = check_each_line(FakeAnalyzer(signals=[FAILED, FAILED, FAILED]), 3)
-    [(code, message)] = notices(sent)
-    assert code == "analysis_unavailable"
-    assert message.startswith("The scam check isn't answering")
-    assert message.endswith("(Groq rate limit reached)")
-
-
-def test_the_banner_comes_down_when_a_check_answers_again():
+def test_checks_carry_on_after_failed_checks():
     session, sent = check_each_line(FakeAnalyzer(signals=[FAILED, FAILED, ANSWERED]), 3)
-    assert [message is None for _, message in notices(sent)] == [False, True]
+    assert [s["level"] for s in states(sent)] == ["unknown", "unknown", "green"]
     assert session.checks == 3
+    assert not [m for m in sent if m["type"] not in ("transcript", "state")]  # no banner messages
 
 
 def test_ending_the_call_stops_a_check_in_flight():
