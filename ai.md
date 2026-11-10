@@ -8,7 +8,7 @@ I built this with Claude Code (Anthropic's coding assistant in my terminal). Thi
 2. **I listed the edge cases and trade-offs myself.** The plan has a register of edge cases (a polite scammer, a real urgent call from a school, noisy audio, a spoken prompt injection, the app hearing its own warning, the screen flickering between colours) and a list of trade-offs (check every few seconds or less often, catch more scams or raise fewer false alarms, cloud or on-device).
 3. **Then I asked Claude to check my work.** I gave it the flow, the design, the edge cases and the trade-offs and asked what I'd missed, so I wasn't relying on my own blind spots. I read everything it said and decided what to keep.
 4. **I challenged it when I wasn't sure.** If an answer didn't convince me, I asked it to justify it or to check again, and I tested the claim myself. The next section lists what came out of that.
-5. **I built one small step at a time and committed each myself**, so I could read and understand every change before moving on. The history is about 40 small commits.
+5. **I built one small step at a time and committed each myself.** My rule was that no code Claude wrote went into the project until I had reviewed it. I read it, ran it, and asked Claude to explain anything I didn't follow before I accepted it. The history is about 35 small commits, each one a change I had looked at.
 
 ## Using Claude to learn the field
 
@@ -19,11 +19,16 @@ I was new to voice AI, so I used Claude as a tutor as well as a coder. I asked i
 - **How do you evaluate something like this?** I didn't know the vocabulary. It taught me recall, precision, false-alarm rate and the confusion matrix, why a small test set is a smoke test and not proof, why you can't test on the examples you tuned on, and that you report the failures as well as the score.
 - **What did I forget?** When I thought I was done, I asked it what tests and evaluation I'd left out. That is where the separate test set, the time-to-first-warning measurement and the failure analysis came from (see below).
 
-## What Claude wrote
+## Who wrote what
 
-- **Most of the code**, one step at a time from my plan: the server, the Deepgram streaming client, the transcript window, the Groq scam check, the scorer, the alert wording, the browser page and the tests (about 150).
+I used Claude where it saved me time and where a mistake was easy to catch by running the code. I kept the decisions that were hard to check for myself.
+
+- **I architected the scorer and the call session, and wrote part of the code myself.** The rules in `scoring/scorer.py` (smoothing, a red flag goes straight to red, no flicker near a threshold, never green again after red, a failed check is never "safe") and the check pacing in `session.py` (new speech only, one check at a time, spaced out for the free tier) are my design. Claude helped me write the code where I got stuck, and I checked each part by running it.
+- **Claude wrote more of the plumbing**, one small step at a time from my plan: the Deepgram streaming client, the transcript window, the Groq request and reply handling, the browser microphone and page code, and the scripts. I read each piece, ran it with real audio or real Groq calls, and fixed what broke (for example the microphone that only sent its first 100 ms).
+- **The browser side is the part I knew least.** I was new to front-end code, so I could not judge every line Claude wrote there. Instead of trusting it, I did two things: I had a second, separate AI agent review the front-end code and look for mistakes, and I ran the page myself in Chrome (a demo call, the microphone, a spoken warning, killing the server mid-call). This is weaker than a front-end expert reading the code, and I say so. Both checks found real problems, and I fixed them before accepting the change.
+- **Tests (about 250): Claude wrote the scaffolding, I decided what to test.** I chose the behaviours that matter, such as "a failed check is never green", "a polite request still turns the meter red", "a spoken instruction can't make a scam look safe" and "evidence nobody said is dropped". These matter more than tests of parsing. When I thought I'd missed something, I asked Claude to look for gaps, then double-checked what it suggested before adding it.
 - **The first draft of the scam-check prompt** (`backend/app/analysis/prompts.py`), which I then changed after testing.
-- **The first draft of the 24 evaluation calls** (`eval/cases.json`). I then reworded most of them myself: 17 of the 24 are now labelled `"source": "hand-written"` and 7 are still Claude's wording (`"claude-drafted"`). I also wrote new scam cases myself that avoid the obvious red-flag words, to test whether the check relies on those words. The single-author limit is smaller than it was, but it is not gone, and I say so in the README.
+- **The first draft of the first 24 evaluation calls** (`eval/cases.json`). I then reworded most of them myself: 17 of the 24 are labelled `"source": "hand-written"` and 7 are still Claude's wording (`"claude-drafted"`). After the first run I wrote five more scams myself (`s13` to `s17`) that avoid the obvious red-flag words, to test whether the check relies on those words, so the set is now 29 calls. The single-author limit is smaller than it was, but it is not gone, and I say so in the README.
 - **The first draft of the evaluation scripts and reports** (`eval/run_eval.py`, `eval/make_report.py`, `eval/results.md`).
 - **Commit messages and comments** were drafted by Claude in my voice and edited by me.
 
@@ -48,9 +53,10 @@ I was new to voice AI, so I used Claude as a tutor as well as a coder. I asked i
 
 ## What the evaluation taught me
 
-- **Testing found a real bug that I would have missed.** My 24 test calls all passed, but they are single checks. When I played the three demo calls in real time with the live model, the app ran out of its 5 checks a minute on small talk and **never checked the moment the scammer asked for money** (the fake bank call never warned at all). I measured it, compared four fixes, and chose one check every 12 seconds with no cap. After the fix, red came 7 to 9 seconds after the ask. I kept the before and after numbers (`eval/timing_baseline.json` and `eval/timing.json`).
-- **The honest result is smaller than the headline.** 12 of 12 scams caught sounds perfect, but with 12 cases the true rate could be anywhere from about 76% to 100%. I said so in the README.
-- **I kept tuning cases out of the test.** I tuned the prompt on 7 live-test calls and the 3 demo scripts, so none of those are in the 24. A test checks this on every run.
+- **Testing found a real bug that I would have missed.** My first 24 test calls all passed, but they are single checks. When I played the three demo calls in real time with the live model, the app ran out of its 5 checks a minute on small talk and **never checked the moment the scammer asked for money** (the fake bank call never warned at all). I measured it, compared four fixes, and chose one check every 12 seconds with no cap. After the fix, red came 7 to 9 seconds after the ask. I kept the before and after numbers (`eval/timing_baseline.json` and `eval/timing.json`).
+- **The honest result is smaller than the headline.** 12 of 12 scams caught on the first 24 cases sounded perfect, but with 12 scams the true rate could be anywhere from about 76% to 100%. So I wrote five harder scams with no red-flag words. The result is now 16 of 17 caught, and the miss (a "council rebate" that only asks for identity details) is a real gap that I left unfixed and documented, instead of tuning the prompt to hide it.
+- **Scores move between runs.** On the same prompt, the same scam call scored 55 in one run and 75 in the next, though the outcome did not change. I wrote that down as a reason to read one run as a snapshot.
+- **I kept tuning cases out of the test.** I tuned the prompt on 7 live-test calls and the 3 demo scripts, so none of those are in the 29. A test checks this on every run.
 - **I wrote down why each mistake happened**, not only that it did (`eval/failure_analysis.md`).
 
 ## Things I checked myself instead of trusting

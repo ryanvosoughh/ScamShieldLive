@@ -88,4 +88,10 @@ If you rewrite a case yourself, set its `source` to `hand-written` and add a lin
 - **Whole ask in 30 seconds.** Every case contains the full request, so it doesn't measure how early a warning comes in a longer call. The demo calls cover that.
 - **Two labels only.** A case is scam or normal; there is no expected yellow or red.
 
-| 10 Nov 2026 | Added 5 scams that avoid every red-flag word (`s13` to `s17`), drafted by me, after the first run. The first run's 24-case results are in git history (commit `1ab4130`) |
+## Change log
+
+| Date | Change |
+|---|---|
+| 10 Nov 2026 | Created 24 cases (12 scam, 12 normal): Claude drafted the wording from my list of scam types and look-alikes |
+| 10 Nov 2026 | Reworded 17 cases myself (`source` set to `hand-written`) |
+| 10 Nov 2026 | Added 5 scams that avoid every red-flag word (`s13` to `s17`), written by me, after the first run. The first run's 24-case results are in git history (commit `1ab4130`) |

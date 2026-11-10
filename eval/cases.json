@@ -238,5 +238,55 @@
     "seen_in_development": false,
     "tests": "An everyday call written like raw speech recognition (no punctuation, misheard words).",
     "text": "hello jean its only me just ringing to see how you got on at the hospital yesterday oh good im so glad they said its nothing serious did you get the bus back alright i told you i could of driven you anyway the weather is meant to be nice tomorrow so do you fancy a walk round the lake in the after noon"
+  },
+  {
+    "id": "s13_rebate_identity_details",
+    "label": "scam",
+    "scam_type": "prize",
+    "tags": ["no_red_flag_words", "polite"],
+    "source": "hand-written",
+    "seen_in_development": false,
+    "tests": "A 'council rebate' that only asks for identity details: no money, codes or transfers are mentioned.",
+    "text": "Good morning, I'm calling from the council's revenue team. You're due a council tax rebate of three hundred and twelve pounds from last year, but we can't release it until we've updated your record. Could you confirm your full name, your date of birth and your National Insurance number for me? It only takes a minute, and once that's done the rebate goes out this week."
+  },
+  {
+    "id": "s14_parcel_fee_by_link",
+    "label": "scam",
+    "scam_type": "other",
+    "tags": ["no_red_flag_words", "urgent"],
+    "source": "hand-written",
+    "seen_in_development": false,
+    "tests": "A small 'shipping charge' paid through a texted link, with a deadline: the payment is by card, not one of the red-flag methods.",
+    "text": "Hello, this is the delivery company. We have a parcel for you that's held at the depot because there's an unpaid shipping charge of two pounds ninety-nine. I'm going to send you a text message now with a link. Just tap it and pay the charge today, otherwise the parcel goes back to the sender tomorrow. Have you got your phone with you?"
+  },
+  {
+    "id": "s15_energy_cut_off_threat",
+    "label": "scam",
+    "scam_type": "other",
+    "tags": ["no_red_flag_words", "urgent"],
+    "source": "hand-written",
+    "seen_in_development": false,
+    "tests": "A threat to cut off the electricity today unless a debt is paid by debit card on the call.",
+    "text": "This is the accounts department at your energy supplier. Your account is three months behind, and an engineer has been booked to disconnect your electricity at four o'clock today. I can stop that now if you settle the balance of two hundred and forty pounds over the phone with your debit card. If you hang up, I can't promise the disconnection will be cancelled."
+  },
+  {
+    "id": "s16_pension_review_polite",
+    "label": "scam",
+    "scam_type": "other",
+    "tags": ["no_red_flag_words", "polite"],
+    "source": "hand-written",
+    "seen_in_development": false,
+    "tests": "A friendly 'pension adviser' pushing savings into a high-return scheme before a deadline: an investment scam with no red-flag words.",
+    "text": "Hello, sorry to call out of the blue. I'm an adviser with a pension review service, and our records show your pension has been underperforming for years. There's no obligation at all, but we've helped a lot of people your age move their savings into a scheme paying eight percent a year. I can send the forms today, and you'd want to sign before the rate closes on Friday."
+  },
+  {
+    "id": "s17_loyalty_discount_card_number",
+    "label": "scam",
+    "scam_type": "prize",
+    "tags": ["no_red_flag_words", "polite"],
+    "source": "hand-written",
+    "seen_in_development": false,
+    "tests": "A 'loyalty discount' that needs the card number and expiry date read out: card details, not a code, PIN or password.",
+    "text": "Hi there, I'm calling from your mobile network. You've been with us a long time, so we'd like to cut your monthly bill in half as a loyalty reward. To apply it, I just need to confirm the card your bill is paid with. Can you read me the long number across the front and the expiry date? The discount will be on your next bill."
   }
 ]

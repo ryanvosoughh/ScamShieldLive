@@ -19,12 +19,12 @@ if they are run again:
 | What | Kind | Fix | Decision |
 |---|---|---|---|
 | `n06_grandson_fixes_laptop` | False alarm | A signal outside the words: is the caller a saved contact? | Keep the label, accept the false alarm |
-| `s04_bank_safe_account_polite` | Near miss | Already handled: the red-flag rule in the scorer | No change; add more polite cases |
+| `s04_bank_safe_account_polite` | Near miss in the first run (risk 55), caught clearly in the second (75) | Already handled: the red-flag rule in the scorer | No change; scores vary between runs |
 | `s13_rebate_identity_details` | **Missed** | Make identity details a warning sign: a red flag, or a rule in the risk scale | Not fixed yet; a known limit |
 | `s16_pension_review_polite`, `s17_loyalty_discount_card_number` | Near misses | The model stretched a red flag to fit; the definitions need widening on purpose | Not changed yet |
 | Demo calls with a Groq key | Late or missing warnings | Spread the checks through the call | **Fixed:** one check every 12 s; red 7 to 9 s after the ask |
 
-One scam in 17 was missed: `s13`. The first 24 cases gave the same results as before the five new scams were added.
+One scam in 17 was missed: `s13`. In the second run, the first 24 cases gave the same outcomes as in the first (the same scams caught, the same false alarm), but not the same scores: for example `s04` went from 55 to 75 with the same prompt and temperature 0.
 
 ## 1. False alarm: the grandson fixing a laptop (`n06`)
 
@@ -55,8 +55,10 @@ grandson would understand.
 ## 2. Near miss: the polite safe-account call (`s04`)
 
 **What happened.** A calm "security team" asks to move savings to a "safe account", with "take your
-time, there's no pressure". The model gave a risk of only 55, which is yellow on its own (40 to 69).
-It reported the `safe_account` red flag, and the scorer turned that into red.
+time, there's no pressure". In the first run the model gave a risk of only 55, which is yellow on its
+own (40 to 69). It reported the `safe_account` red flag, and the scorer turned that into red. In the
+second run, on the same text and prompt, it gave 75. So the number moves between runs even though
+the red flag, and so the outcome, did not.
 
 **Why.** The model scores calm, polite calls lower even when the request is clearly a scam. The
 prompt already says a pleasant tone doesn't make a request safe; the model spots the request (it
@@ -67,7 +69,7 @@ number, so a polite tone can't talk the score down. Two cautions:
 
 - the red-flag list is the safety net. A polite scam whose request isn't on the list would only get
   as far as the model's number; here that is still yellow, so a warning, but a softer one;
-- the set has only four polite scams. More would show how often the number dips like this.
+- the set has only seven polite scams. More would show how often the number dips like this.
 
 **Decision.** No change to the code or the prompt.
 
@@ -95,7 +97,7 @@ Groq key the demo calls use scripted verdicts, which have no cap, so the keyless
 | Option | Effect | Cost |
 |---|---|---|
 | **One check every 12 s, no cap (chosen)** | Checks spread through the call; red an estimated 7 to 12 s after the ask | The first warning can come up to 12 s later |
-| A paid Groq tier, with `CHECKS_PER_MINUTE=15` in `.env` | Checks every 4 s all through the call; a settings change only | Money |
+| A paid Groq tier, keeping the per-minute cap and raising it to 15 | Checks every 4 s all through the call; a settings change only | Money |
 | Smaller checks (a shorter prompt or window) | More checks fit in a minute | Accuracy would need measuring again |
 | Widen the gap as checks are used | An earlier first warning than one every 12 s | More code |
 
@@ -159,6 +161,8 @@ false alarms that might cause.
 - **A smoke test, n = 29.** 16 of 17 scams caught is consistent with a true catch rate anywhere from
   about 73% to 99%, and 1 false alarm in 12 with anything from about 1.5% to 35% (95% Wilson
   intervals). One more case either way moves the catch rate by about 6 points.
+- **One run each.** The two runs of the first 24 cases agreed on outcomes but not on scores, so one
+  run is a snapshot, not a stable measurement.
 - **Text only.** Phone audio, accents, noise and speech-recognition mistakes (beyond two cases) were
   not tested by the 29 cases.
 - **Look-alikes on purpose.** 10 of the 12 normal calls were chosen to be hard, so the false-alarm

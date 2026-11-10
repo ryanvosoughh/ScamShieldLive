@@ -10,13 +10,13 @@ while tuning the prompt. With so few cases, one case moves a rate by several poi
 
 | Run at (UTC) | Model | Yellow / red line | Prompt | Cases | Code |
 |---|---|---|---|---|---|
-| 2026-11-10T21:36:20+00:00 | `openai/gpt-oss-120b` | 40 / 70 | `0e65300ae02f` | `152e888650d1` | `01103fd` |
+| 2026-11-10T23:32:15+00:00 | `openai/gpt-oss-120b` | 40 / 70 | `0e65300ae02f` | `c9340e38fd3f` | `acb3312 with uncommitted changes` |
 
 ## Headline
 
 - **Scams caught:** 16 of 17
 - **Normal calls left green:** 11 of 12
-- **Time per check:** 0.8 s on average, 2.8 s at worst
+- **Time per check:** 0.7 s on average, 1.3 s at worst
 
 ## Confusion matrix
 
@@ -32,7 +32,7 @@ Recall: of the scams, how many warned. Precision: of the warnings, how many were
 | Counted as a warning | Recall | Precision | False-alarm rate |
 |---|---|---|---|
 | Yellow or red | 94% (16/17) | 94% (16/17) | 8% (1/12) |
-| Red only | 94% (16/17) | 94% (16/17) | 8% (1/12) |
+| Red only | 88% (15/17) | 94% (15/16) | 8% (1/12) |
 
 ## By tag
 
@@ -93,41 +93,42 @@ Run at 2026-11-10T14:50:56+00:00: checks at least 4 s apart and at most 5 a minu
 
 | Case | Label | Meter | Model risk | Red flags | Outcome | Time |
 |---|---|---|---|---|---|---|
-| `s01_grandchild_arrested_abroad` | scam | red | 95 | unusual_payment | caught | 1.2 s |
-| `s02_grandchild_courier_polite` | scam | red | 80 | unusual_payment | caught | 1.1 s |
-| `s03_bank_one_time_code` | scam | red | 78 | asks_for_code | caught | 0.9 s |
-| `s04_bank_safe_account_polite` | scam | red | 75 | safe_account | caught | 0.6 s |
-| `s05_tech_remote_access` | scam | red | 75 | remote_control | caught | 0.6 s |
-| `s06_tech_refund_injection` | scam | red | 78 | unusual_payment | caught | 0.5 s |
-| `s07_romance_medical_polite` | scam | red | 75 | money_for_stranger | caught | 1.7 s |
-| `s08_romance_crypto` | scam | red | 80 | unusual_payment, money_for_stranger | caught | 0.8 s |
-| `s09_prize_gift_cards` | scam | red | 95 | asks_for_code, unusual_payment | caught | 0.6 s |
-| `s10_prize_refund_fee_polite` | scam | red | 75 | unusual_payment | caught | 1.1 s |
-| `s11_other_tax_arrest_threat` | scam | red | 85 | unusual_payment | caught | 0.9 s |
-| `s12_grandchild_asr_errors` | scam | red | 85 | unusual_payment | caught | 1.0 s |
-| `n01_bank_returning_call` | normal | green | 10 | – | correct | 0.9 s |
-| `n02_delivery_left_with_neighbour` | normal | green | 10 | – | correct | 0.5 s |
-| `n03_neighbour_emergency` | normal | green | 10 | – | correct | 0.8 s |
-| `n04_surgery_date_of_birth` | normal | green | 5 | – | correct | 0.3 s |
-| `n05_grandchild_school_trip` | normal | green | 10 | – | correct | 0.7 s |
-| `n06_grandson_fixes_laptop` | normal | red | 75 | asks_for_code, remote_control | false alarm | 0.5 s |
-| `n07_partner_away_chat` | normal | green | 5 | – | correct | 0.5 s |
-| `n08_friend_tells_scam_story` | normal | green | 10 | – | correct | 0.7 s |
-| `n09_insurance_renewal` | normal | green | 10 | – | correct | 0.4 s |
-| `n10_sunday_lunch` | normal | green | 5 | – | correct | 0.8 s |
+| `s01_grandchild_arrested_abroad` | scam | red | 85 | unusual_payment | caught | 1.3 s |
+| `s02_grandchild_courier_polite` | scam | red | 80 | unusual_payment | caught | 1.2 s |
+| `s03_bank_one_time_code` | scam | red | 78 | asks_for_code | caught | 0.8 s |
+| `s04_bank_safe_account_polite` | scam | red | 55 | safe_account | caught | 0.9 s |
+| `s05_tech_remote_access` | scam | red | 75 | remote_control | caught | 0.8 s |
+| `s06_tech_refund_injection` | scam | red | 85 | unusual_payment | caught | 0.8 s |
+| `s07_romance_medical_polite` | scam | red | 75 | money_for_stranger, unusual_payment | caught | 1.1 s |
+| `s08_romance_crypto` | scam | red | 92 | unusual_payment, money_for_stranger | caught | 1.0 s |
+| `s09_prize_gift_cards` | scam | red | 95 | asks_for_code, unusual_payment | caught | 1.0 s |
+| `s10_prize_refund_fee_polite` | scam | red | 82 | unusual_payment, safe_account | caught | 1.2 s |
+| `s11_other_tax_arrest_threat` | scam | red | 85 | unusual_payment | caught | 0.8 s |
+| `s12_grandchild_asr_errors` | scam | red | 85 | unusual_payment, money_for_stranger | caught | 0.9 s |
+| `n01_bank_returning_call` | normal | green | 10 | – | correct | 0.8 s |
+| `n02_delivery_left_with_neighbour` | normal | green | 10 | – | correct | 0.3 s |
+| `n03_neighbour_emergency` | normal | green | 10 | – | correct | 0.4 s |
+| `n04_surgery_date_of_birth` | normal | green | 10 | – | correct | 0.4 s |
+| `n05_grandchild_school_trip` | normal | green | 10 | – | correct | 0.6 s |
+| `n06_grandson_fixes_laptop` | normal | red | 75 | asks_for_code, remote_control | false alarm | 0.6 s |
+| `n07_partner_away_chat` | normal | green | 5 | – | correct | 0.3 s |
+| `n08_friend_tells_scam_story` | normal | green | 5 | – | correct | 0.5 s |
+| `n09_insurance_renewal` | normal | green | 10 | – | correct | 0.3 s |
+| `n10_sunday_lunch` | normal | green | 5 | – | correct | 0.3 s |
 | `n11_engineer_visit` | normal | green | 10 | – | correct | 0.4 s |
-| `n12_friend_chat_asr_errors` | normal | green | 5 | – | correct | 0.4 s |
-| `s13_rebate_identity_details` | scam | green | 30 | – | missed | 1.1 s |
-| `s14_parcel_fee_by_link` | scam | red | 75 | unusual_payment | caught | 2.8 s |
-| `s15_energy_cut_off_threat` | scam | red | 78 | unusual_payment | caught | 1.3 s |
-| `s16_pension_review_polite` | scam | red | 45 | safe_account | caught | 0.7 s |
-| `s17_loyalty_discount_card_number` | scam | red | 55 | unusual_payment | caught | 0.7 s |
+| `n12_friend_chat_asr_errors` | normal | green | 10 | – | correct | 0.4 s |
+| `s13_rebate_identity_details` | scam | green | 30 | – | missed | 0.9 s |
+| `s14_parcel_fee_by_link` | scam | red | 75 | unusual_payment | caught | 0.7 s |
+| `s15_energy_cut_off_threat` | scam | red | 75 | unusual_payment | caught | 0.6 s |
+| `s16_pension_review_polite` | scam | yellow | 55 | – | caught | 1.0 s |
+| `s17_loyalty_discount_card_number` | scam | red | 45 | unusual_payment | caught | 0.8 s |
 
 ## Mistakes and near misses
 
-- **`n06_grandson_fixes_laptop`, false alarm:** the meter showed red (model risk 75, red flags: asks_for_code, remote_control). The model's reason: "They want you to give them a code and control your computer, which is a common scam."
+- **`n06_grandson_fixes_laptop`, false alarm:** the meter showed red (model risk 75, red flags: asks_for_code, remote_control). The model's reason: "They are trying to see your screen and ask for a code, which is a common scam."
 - **`s13_rebate_identity_details`, missed:** the meter showed green (model risk 30, red flags: none). The model's reason: "They are asking for personal details you should not give over the phone."
-- **`s16_pension_review_polite`, near miss:** caught, but the model's risk was 45, under the red line of 70; a red flag made it red (safe_account).
-- **`s17_loyalty_discount_card_number`, near miss:** caught, but the model's risk was 55, under the red line of 70; a red flag made it red (unusual_payment).
+- **`s04_bank_safe_account_polite`, near miss:** caught, but the model's risk was 55, under the red line of 70; a red flag made it red (safe_account).
+- **`s16_pension_review_polite`, near miss:** caught, but the model's risk was 55, under the red line of 70; it only reached yellow (no red flags).
+- **`s17_loyalty_discount_card_number`, near miss:** caught, but the model's risk was 45, under the red line of 70; a red flag made it red (unusual_payment).
 
 Why each one happened, and what would fix it: `failure_analysis.md`.

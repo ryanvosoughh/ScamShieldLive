@@ -1,12 +1,12 @@
 {
   "run": {
-    "run_at": "2026-11-10T21:36:20+00:00",
+    "run_at": "2026-11-10T23:32:15+00:00",
     "model": "openai/gpt-oss-120b",
     "yellow_threshold": 40,
     "red_threshold": 70,
     "prompt_sha256": "0e65300ae02f",
-    "cases_sha256": "152e888650d1",
-    "git_commit": "01103fd",
+    "cases_sha256": "c9340e38fd3f",
+    "git_commit": "acb3312 with uncommitted changes",
     "cases": 29
   },
   "results": [
@@ -19,18 +19,18 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 95,
+      "risk": 85,
       "scam_type": "grandchild",
       "red_flags": [
         "unusual_payment"
       ],
       "evidence": [
         "pay eleven hundred euros today",
-        "Please don't tell Mum, she'll panic",
-        "send it by bank transfer to the lawyer's account"
+        "Please don't tell Mum",
+        "bank transfer to the lawyer's account"
       ],
-      "reason": "They are trying to get you to send money quickly and secretly.",
-      "seconds": 1.23,
+      "reason": "They are asking you to send money quickly and keep it secret, which is a common scam.",
+      "seconds": 1.32,
       "attempts": 1,
       "error": null
     },
@@ -54,8 +54,8 @@
         "a colleague can pop round this afternoon to collect it in cash",
         "Tom asked us to keep it between ourselves for now"
       ],
-      "reason": "They are trying to get you to give cash for a bail payment and ask you to keep it secret.",
-      "seconds": 1.07,
+      "reason": "They are asking for cash bail money and telling you to keep it secret.",
+      "seconds": 1.16,
       "attempts": 1,
       "error": null
     },
@@ -74,12 +74,12 @@
         "asks_for_code"
       ],
       "evidence": [
-        "I'm going to send a one-time passcode to your mobile",
+        "We've stopped a payment of nine hundred and forty pounds",
         "read it back to me so I can block the transaction",
         "please be quick, the payment will go through in the next few minutes"
       ],
-      "reason": "They are trying to get a security code from you, which real banks never ask for over the phone.",
-      "seconds": 0.94,
+      "reason": "They are trying to get a security code from you to stop a fake payment.",
+      "seconds": 0.83,
       "attempts": 1,
       "error": null
     },
@@ -92,7 +92,7 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 75,
+      "risk": 55,
       "scam_type": "bank",
       "red_flags": [
         "safe_account"
@@ -102,7 +102,7 @@
         "new safe account in your name"
       ],
       "reason": "They are trying to get you to move money to a new account they control.",
-      "seconds": 0.62,
+      "seconds": 0.92,
       "attempts": 1,
       "error": null
     },
@@ -122,10 +122,10 @@
       ],
       "evidence": [
         "type in the web address I give you",
-        "download a small program so our engineer can take control of the screen"
+        "our engineer can take control of the screen"
       ],
-      "reason": "They are trying to take control of your computer, which is a common scam.",
-      "seconds": 0.55,
+      "reason": "They are trying to get you to let them control your computer, which is a common scam.",
+      "seconds": 0.78,
       "attempts": 1,
       "error": null
     },
@@ -138,8 +138,8 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 78,
-      "scam_type": "prize",
+      "risk": 85,
+      "scam_type": "other",
       "red_flags": [
         "unusual_payment"
       ],
@@ -149,7 +149,7 @@
         "gift cards from the shop"
       ],
       "reason": "They are asking you to pay money with gift cards, which is a common scam.",
-      "seconds": 0.51,
+      "seconds": 0.85,
       "attempts": 1,
       "error": null
     },
@@ -165,15 +165,15 @@
       "risk": 75,
       "scam_type": "romance",
       "red_flags": [
-        "money_for_stranger"
+        "money_for_stranger",
+        "unusual_payment"
       ],
       "evidence": [
         "my daughter is in hospital back home",
-        "my bank card is frozen out here",
-        "could you send something through a money transfer app"
+        "could you send something through a money transfer app?"
       ],
-      "reason": "They are asking you to send money to someone you don’t know, using a sad story.",
-      "seconds": 1.68,
+      "reason": "They are asking you to send money to someone you have never met.",
+      "seconds": 1.1,
       "attempts": 1,
       "error": null
     },
@@ -186,7 +186,7 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 80,
+      "risk": 92,
       "scam_type": "romance",
       "red_flags": [
         "unusual_payment",
@@ -194,10 +194,11 @@
       ],
       "evidence": [
         "Just buy some bitcoin and send it to the wallet address",
-        "Do it tonight before the price goes up"
+        "Do it tonight before the price goes up",
+        "Hey beautiful, I know we've only talked online"
       ],
       "reason": "They are asking you to send money quickly to a stranger you only met online.",
-      "seconds": 0.83,
+      "seconds": 0.98,
       "attempts": 1,
       "error": null
     },
@@ -221,8 +222,8 @@
         "we can only accept that in gift cards",
         "call me back with the codes"
       ],
-      "reason": "They are trying to get you to pay with gift cards and give them codes, which is a common scam.",
-      "seconds": 0.57,
+      "reason": "They are asking you to pay with gift cards and give them the codes, which is a common scam.",
+      "seconds": 0.96,
       "attempts": 1,
       "error": null
     },
@@ -236,17 +237,19 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 75,
+      "risk": 82,
       "scam_type": "prize",
       "red_flags": [
-        "unusual_payment"
+        "unusual_payment",
+        "safe_account"
       ],
       "evidence": [
-        "there's a small processing fee of a hundred and fifty pounds, which you can pay by bank transfer",
+        "refund you're owed from an old insurance policy",
+        "small processing fee of a hundred and fifty pounds, which you can pay by bank transfer",
         "please don't mention it to family or your bank until it's paid out"
       ],
-      "reason": "They are asking you to pay a fee before you get a refund and telling you to keep it secret, which is a common scam.",
-      "seconds": 1.1,
+      "reason": "They are asking you to pay a fee in secret before you get money, which is a common scam.",
+      "seconds": 1.18,
       "attempts": 1,
       "error": null
     },
@@ -271,7 +274,7 @@
         "gift cards"
       ],
       "reason": "They are trying to scare you and ask for gift cards to pay a fake tax bill.",
-      "seconds": 0.95,
+      "seconds": 0.84,
       "attempts": 1,
       "error": null
     },
@@ -288,15 +291,16 @@
       "risk": 85,
       "scam_type": "grandchild",
       "red_flags": [
-        "unusual_payment"
+        "unusual_payment",
+        "money_for_stranger"
       ],
       "evidence": [
         "need help with money today",
         "please dont tell mum",
         "a man will come and pick it up at six"
       ],
-      "reason": "They are demanding cash fast and telling you to keep it secret, which is a common scam tactic.",
-      "seconds": 0.99,
+      "reason": "They are asking for cash quickly and telling you to keep it secret.",
+      "seconds": 0.88,
       "attempts": 1,
       "error": null
     },
@@ -314,7 +318,7 @@
       "red_flags": [],
       "evidence": [],
       "reason": "The caller is just confirming a new card and does not ask for money, codes, or secrecy.",
-      "seconds": 0.87,
+      "seconds": 0.75,
       "attempts": 1,
       "error": null
     },
@@ -332,7 +336,7 @@
       "red_flags": [],
       "evidence": [],
       "reason": "They are just telling you about a delivery and not asking for money or personal information.",
-      "seconds": 0.48,
+      "seconds": 0.34,
       "attempts": 1,
       "error": null
     },
@@ -350,8 +354,8 @@
       "scam_type": "none",
       "red_flags": [],
       "evidence": [],
-      "reason": "They are just telling you about a family emergency and not asking for money, codes, or secret actions.",
-      "seconds": 0.8,
+      "reason": "It sounds like a real emergency about your sister, not a request for money or personal info.",
+      "seconds": 0.39,
       "attempts": 1,
       "error": null
     },
@@ -366,12 +370,12 @@
       ],
       "level": "green",
       "outcome": "correct",
-      "risk": 5,
+      "risk": 10,
       "scam_type": "none",
       "red_flags": [],
       "evidence": [],
-      "reason": "They are just confirming your appointment and results, no request for money or personal codes.",
-      "seconds": 0.31,
+      "reason": "It's just a normal call about your test results and appointment.",
+      "seconds": 0.38,
       "attempts": 1,
       "error": null
     },
@@ -389,8 +393,8 @@
       "scam_type": "none",
       "red_flags": [],
       "evidence": [],
-      "reason": "They are just talking about a school trip and asking how you are, with no request for money, codes, or secrecy.",
-      "seconds": 0.71,
+      "reason": "The caller is just talking about a school trip and asking for help, with no urgent or secret money request.",
+      "seconds": 0.56,
       "attempts": 1,
       "error": null
     },
@@ -415,8 +419,8 @@
         "Open the app with the blue icon I put on there and read me the number it shows",
         "I can sort it from here like last time"
       ],
-      "reason": "They want you to give them a code and control your computer, which is a common scam.",
-      "seconds": 0.51,
+      "reason": "They are trying to see your screen and ask for a code, which is a common scam.",
+      "seconds": 0.59,
       "attempts": 1,
       "error": null
     },
@@ -434,7 +438,7 @@
       "red_flags": [],
       "evidence": [],
       "reason": "The caller is just chatting and not asking for money, codes, or anything suspicious.",
-      "seconds": 0.48,
+      "seconds": 0.32,
       "attempts": 1,
       "error": null
     },
@@ -449,12 +453,12 @@
       ],
       "level": "green",
       "outcome": "correct",
-      "risk": 10,
+      "risk": 5,
       "scam_type": "none",
       "red_flags": [],
       "evidence": [],
-      "reason": "The caller is just talking about a story and a coffee meeting, not asking for money or personal info.",
-      "seconds": 0.7,
+      "reason": "The caller is just talking about a past scam and making plans, not asking for money or personal info.",
+      "seconds": 0.5,
       "attempts": 1,
       "error": null
     },
@@ -472,7 +476,7 @@
       "red_flags": [],
       "evidence": [],
       "reason": "They are just informing you about a policy renewal and not asking for money or personal codes.",
-      "seconds": 0.38,
+      "seconds": 0.34,
       "attempts": 1,
       "error": null
     },
@@ -490,7 +494,7 @@
       "red_flags": [],
       "evidence": [],
       "reason": "The caller is just making family plans and does not ask for money, codes, or secrecy.",
-      "seconds": 0.82,
+      "seconds": 0.33,
       "attempts": 1,
       "error": null
     },
@@ -522,12 +526,12 @@
       ],
       "level": "green",
       "outcome": "correct",
-      "risk": 5,
+      "risk": 10,
       "scam_type": "none",
       "red_flags": [],
       "evidence": [],
-      "reason": "The caller is just chatting and not asking for money, codes, or anything suspicious.",
-      "seconds": 0.39,
+      "reason": "The caller is just chatting and not asking for money, codes, or anything urgent.",
+      "seconds": 0.44,
       "attempts": 1,
       "error": null
     },
@@ -542,14 +546,13 @@
       "level": "green",
       "outcome": "missed",
       "risk": 30,
-      "scam_type": "other",
+      "scam_type": "none",
       "red_flags": [],
       "evidence": [
-        "Could you confirm your full name, your date of birth and your National Insurance number for me?",
-        "we can't release it until we've updated your record"
+        "Could you confirm your full name, your date of birth and your National Insurance number for me?"
       ],
       "reason": "They are asking for personal details you should not give over the phone.",
-      "seconds": 1.12,
+      "seconds": 0.86,
       "attempts": 1,
       "error": null
     },
@@ -573,8 +576,8 @@
         "send you a text message now with a link",
         "pay the charge today, otherwise the parcel goes back"
       ],
-      "reason": "They are trying to get you to pay a fee through a link, which is a common scam.",
-      "seconds": 2.84,
+      "reason": "They are trying to get you to pay a fake delivery fee through a link.",
+      "seconds": 0.72,
       "attempts": 1,
       "error": null
     },
@@ -588,18 +591,18 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 78,
+      "risk": 75,
       "scam_type": "other",
       "red_flags": [
         "unusual_payment"
       ],
       "evidence": [
         "Your account is three months behind",
-        "settle the balance of two hundred and forty pounds over the phone with your debit card",
-        "engineer has been booked to disconnect your electricity at four o'clock today"
+        "engineer has been booked to disconnect your electricity at four o'clock today",
+        "settle the balance of two hundred and forty pounds over the phone with your debit card"
       ],
-      "reason": "They are trying to get you to pay right now over the phone to avoid a fake disconnection.",
-      "seconds": 1.32,
+      "reason": "They are trying to get you to pay money right now to avoid a fake disconnection.",
+      "seconds": 0.59,
       "attempts": 1,
       "error": null
     },
@@ -611,20 +614,17 @@
         "no_red_flag_words",
         "polite"
       ],
-      "level": "red",
+      "level": "yellow",
       "outcome": "caught",
-      "risk": 45,
+      "risk": 55,
       "scam_type": "other",
-      "red_flags": [
-        "safe_account"
-      ],
+      "red_flags": [],
       "evidence": [
-        "your pension has been underperforming for years",
-        "move their savings into a scheme paying eight percent a year",
+        "move their savings into a scheme",
         "sign before the rate closes on Friday"
       ],
-      "reason": "They are trying to get you to move your retirement money quickly.",
-      "seconds": 0.68,
+      "reason": "They are trying to get you to move your pension money quickly.",
+      "seconds": 0.99,
       "attempts": 1,
       "error": null
     },
@@ -638,17 +638,17 @@
       ],
       "level": "red",
       "outcome": "caught",
-      "risk": 55,
+      "risk": 45,
       "scam_type": "other",
       "red_flags": [
         "unusual_payment"
       ],
       "evidence": [
-        "need to confirm the card your bill is paid with",
-        "Can you read me the long number across the front and the expiry date?"
+        "confirm the card your bill is paid with",
+        "read me the long number across the front and the expiry date"
       ],
-      "reason": "They are asking for your full card details, which is a common scam tactic.",
-      "seconds": 0.65,
+      "reason": "They are asking for your full card details, which is not normal for a loyalty offer.",
+      "seconds": 0.8,
       "attempts": 1,
       "error": null
     }
