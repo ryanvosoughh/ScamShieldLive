@@ -173,7 +173,7 @@ def play_whole_call(scenario_id):
         scenario = load_scenario(scenario_id)
         stt = ReplaySTT(scenario, speed=FAST)
         session = CallSession(
-            stt, send, analyzer=ScriptedAnalyzer(scenario), check_interval=4 / FAST, checks_per_minute=1000
+            stt, send, analyzer=ScriptedAnalyzer(scenario), check_interval=4 / FAST
         )
         await session.start()
         await asyncio.wait_for(stt.finished.wait(), timeout=5)

@@ -58,12 +58,27 @@ Recall: of the scams, how many warned. Precision: of the warnings, how many were
 
 ## Time to first warning (the demo calls)
 
-Each demo call played in real time through the live pipeline (the same `CallSession`, the real
-check on Groq, checks at least 4 s apart and at most 5 a minute).
-Run at 2026-11-10T14:50:56+00:00, prompt `0e65300ae02f`, code `1ab4130`.
+Each demo call played in real time through the live pipeline: the same `CallSession`, with the
+real check on Groq. The *warning sign* is the first line the script rates yellow or above; the
+*ask* is the first line with a red flag. The gaps say how long after each one the meter changed.
 
-The *warning sign* is the first line the script rates yellow or above; the *ask* is the first line
-with a red flag. The gaps say how long after each one the meter changed.
+Run at 2026-11-10T21:01:21+00:00: checks at least 12 s apart, prompt `0e65300ae02f`, code `ce6b9d0 with uncommitted changes`.
+
+| Call | Kind | Ends at | Last check | Warning sign | First warning | Ask | First red |
+|---|---|---|---|---|---|---|---|
+| Fake bank fraud team | scam | 50.3 s | 41.8 s | 24.2 s | 41.8 s (+17.6 s) | 32.9 s | 41.8 s (+8.9 s) |
+| Grandchild in trouble | scam | 45.8 s | 41.3 s | 19.5 s | 29.5 s (+10.0 s) | 34.0 s | 41.3 s (+7.3 s) |
+| Grandchild saying thank you | normal | 30.1 s | 28.9 s | – | never (–) | – | never (–) |
+
+11 checks in all, 0 failed.
+
+### Before the pacing fix
+
+The first timing run, kept in `timing_baseline.json`. Checks could come every 4 s but at most
+5 a minute, and all 5 were used up on the small talk, so nothing was checked when the scam was
+asked for. The 24 single-check cases above couldn't show this.
+
+Run at 2026-11-10T14:50:56+00:00: checks at least 4 s apart and at most 5 a minute, prompt `0e65300ae02f`, code `1ab4130`.
 
 | Call | Kind | Ends at | Last check | Warning sign | First warning | Ask | First red |
 |---|---|---|---|---|---|---|---|

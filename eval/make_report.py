@@ -1,4 +1,4 @@
-"""Phase 4D: write eval/results.md from eval/results.json, and eval/timing.json if it is there.
+"""Phase 4D: write eval/results.md from eval/results.json, and the timing files if they are there.
 
     .venv/bin/python eval/make_report.py
 
@@ -16,6 +16,7 @@ from pathlib import Path
 EVAL_DIR = Path(__file__).resolve().parent
 RESULTS_FILE = EVAL_DIR / "results.json"
 TIMING_FILE = EVAL_DIR / "timing.json"
+BASELINE_TIMING_FILE = EVAL_DIR / "timing_baseline.json"  # the run that found the pacing bug
 REPORT_FILE = EVAL_DIR / "results.md"
 FAILURE_ANALYSIS = EVAL_DIR / "failure_analysis.md"
 
@@ -65,7 +66,33 @@ def gap(after: float | None, before: float | None) -> str:
     return f"{difference:+.1f} s" if difference >= 0 else f"{-difference:.1f} s before it"
 
 
-def build_report(report: dict, timing: dict | None) -> str:
+def timing_table(timing: dict) -> list[str]:
+    """One timing run as a table, with the pacing and code it ran with."""
+    run = timing["run"]
+    pacing = f"checks at least {run['check_interval_seconds']:g} s apart"
+    if run.get("checks_per_minute"):  # only the run from before the pacing fix had a cap
+        pacing += f" and at most {run['checks_per_minute']} a minute"
+    rows = [
+        f"Run at {run['run_at']}: {pacing}, prompt `{run['prompt_sha256']}`, code `{run['git_commit']}`.",
+        "",
+        "| Call | Kind | Ends at | Last check | Warning sign | First warning | Ask | First red |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for call in timing["calls"]:
+        last = call["states"][-1]["at"] if call["states"] else None
+        rows.append(
+            f"| {call['title']} | {call['kind']} | {seconds(call['seconds'])} | {seconds(last)} |"
+            f" {seconds(call['warning_sign_at']) if call['warning_sign_at'] else '–'} |"
+            f" {seconds(call['first_warning_at'])} ({gap(call['first_warning_at'], call['warning_sign_at'])}) |"
+            f" {seconds(call['ask_at']) if call['ask_at'] else '–'} |"
+            f" {seconds(call['first_red_at'])} ({gap(call['first_red_at'], call['ask_at'])}) |"
+        )
+    failed = sum(call["failed_checks"] for call in timing["calls"])
+    rows += ["", f"{sum(call['checks'] for call in timing['calls'])} checks in all, {failed} failed."]
+    return rows
+
+
+def build_report(report: dict, timing: dict | None, baseline: dict | None = None) -> str:
     run, results = report["run"], report["results"]
     count = Counter(result["outcome"] for result in results)
     scams = sum(result["label"] == "scam" for result in results)
@@ -126,29 +153,23 @@ def build_report(report: dict, timing: dict | None) -> str:
             "",
             "## Time to first warning (the demo calls)",
             "",
-            "Each demo call played in real time through the live pipeline (the same `CallSession`, the real",
-            f"check on Groq, checks at least {timing['run']['check_interval_seconds']:g} s apart and at most"
-            f" {timing['run']['checks_per_minute']} a minute).",
-            f"Run at {timing['run']['run_at']}, prompt `{timing['run']['prompt_sha256']}`,"
-            f" code `{timing['run']['git_commit']}`.",
+            "Each demo call played in real time through the live pipeline: the same `CallSession`, with the",
+            "real check on Groq. The *warning sign* is the first line the script rates yellow or above; the",
+            "*ask* is the first line with a red flag. The gaps say how long after each one the meter changed.",
             "",
-            "The *warning sign* is the first line the script rates yellow or above; the *ask* is the first line",
-            "with a red flag. The gaps say how long after each one the meter changed.",
-            "",
-            "| Call | Kind | Ends at | Last check | Warning sign | First warning | Ask | First red |",
-            "|---|---|---|---|---|---|---|---|",
+            *timing_table(timing),
         ]
-        for call in timing["calls"]:
-            last = call["states"][-1]["at"] if call["states"] else None
-            out.append(
-                f"| {call['title']} | {call['kind']} | {seconds(call['seconds'])} | {seconds(last)} |"
-                f" {seconds(call['warning_sign_at']) if call['warning_sign_at'] else '–'} |"
-                f" {seconds(call['first_warning_at'])} ({gap(call['first_warning_at'], call['warning_sign_at'])}) |"
-                f" {seconds(call['ask_at']) if call['ask_at'] else '–'} |"
-                f" {seconds(call['first_red_at'])} ({gap(call['first_red_at'], call['ask_at'])}) |"
-            )
-        failed = sum(call["failed_checks"] for call in timing["calls"])
-        out += ["", f"{sum(call['checks'] for call in timing['calls'])} checks in all, {failed} failed."]
+        if baseline:
+            out += [
+                "",
+                "### Before the pacing fix",
+                "",
+                "The first timing run, kept in `timing_baseline.json`. Checks could come every 4 s but at most",
+                "5 a minute, and all 5 were used up on the small talk, so nothing was checked when the scam was",
+                "asked for. The 24 single-check cases above couldn't show this.",
+                "",
+                *timing_table(baseline),
+            ]
 
     out += [
         "",
@@ -199,7 +220,8 @@ def main() -> int:
         return 1
     report = json.loads(RESULTS_FILE.read_text())
     timing = json.loads(TIMING_FILE.read_text()) if TIMING_FILE.exists() else None
-    REPORT_FILE.write_text(build_report(report, timing))
+    baseline = json.loads(BASELINE_TIMING_FILE.read_text()) if BASELINE_TIMING_FILE.exists() else None
+    REPORT_FILE.write_text(build_report(report, timing, baseline))
     print(f"Wrote {REPORT_FILE.relative_to(EVAL_DIR.parent)}")
     return 0
 

@@ -1,13 +1,12 @@
 {
   "run": {
-    "run_at": "2026-11-10T14:50:56+00:00",
+    "run_at": "2026-11-10T21:01:21+00:00",
     "model": "openai/gpt-oss-120b",
     "yellow_threshold": 40,
     "red_threshold": 70,
-    "check_interval_seconds": 4.0,
-    "checks_per_minute": 5,
+    "check_interval_seconds": 12.0,
     "prompt_sha256": "0e65300ae02f",
-    "git_commit": "1ab4130"
+    "git_commit": "ce6b9d0 with uncommitted changes"
   },
   "calls": [
     {
@@ -17,9 +16,9 @@
       "seconds": 50.3,
       "warning_sign_at": 24.2,
       "ask_at": 32.9,
-      "first_warning_at": null,
-      "first_red_at": null,
-      "checks": 5,
+      "first_warning_at": 41.8,
+      "first_red_at": 41.8,
+      "checks": 4,
       "failed_checks": 0,
       "states": [
         {
@@ -28,23 +27,18 @@
           "failed": false
         },
         {
-          "at": 10.0,
+          "at": 17.5,
           "level": "green",
           "failed": false
         },
         {
-          "at": 15.5,
+          "at": 29.9,
           "level": "green",
           "failed": false
         },
         {
-          "at": 19.5,
-          "level": "green",
-          "failed": false
-        },
-        {
-          "at": 25.0,
-          "level": "green",
+          "at": 41.8,
+          "level": "red",
           "failed": false
         }
       ]
@@ -56,34 +50,29 @@
       "seconds": 45.8,
       "warning_sign_at": 19.5,
       "ask_at": 34.0,
-      "first_warning_at": 29.7,
-      "first_red_at": null,
-      "checks": 5,
+      "first_warning_at": 29.5,
+      "first_red_at": 41.3,
+      "checks": 4,
       "failed_checks": 0,
       "states": [
         {
-          "at": 4.9,
+          "at": 5.6,
           "level": "green",
           "failed": false
         },
         {
-          "at": 11.0,
+          "at": 16.8,
           "level": "green",
           "failed": false
         },
         {
-          "at": 20.2,
-          "level": "green",
-          "failed": false
-        },
-        {
-          "at": 24.0,
-          "level": "green",
-          "failed": false
-        },
-        {
-          "at": 29.7,
+          "at": 29.5,
           "level": "yellow",
+          "failed": false
+        },
+        {
+          "at": 41.3,
+          "level": "red",
           "failed": false
         }
       ]
@@ -97,31 +86,21 @@
       "ask_at": null,
       "first_warning_at": null,
       "first_red_at": null,
-      "checks": 5,
+      "checks": 3,
       "failed_checks": 0,
       "states": [
         {
-          "at": 4.8,
+          "at": 4.7,
           "level": "green",
           "failed": false
         },
         {
-          "at": 11.1,
+          "at": 17.0,
           "level": "green",
           "failed": false
         },
         {
-          "at": 16.1,
-          "level": "green",
-          "failed": false
-        },
-        {
-          "at": 18.9,
-          "level": "green",
-          "failed": false
-        },
-        {
-          "at": 23.1,
+          "at": 28.9,
           "level": "green",
           "failed": false
         }

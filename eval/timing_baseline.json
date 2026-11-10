@@ -1,0 +1,131 @@
+{
+  "run": {
+    "run_at": "2026-11-10T14:50:56+00:00",
+    "model": "openai/gpt-oss-120b",
+    "yellow_threshold": 40,
+    "red_threshold": 70,
+    "check_interval_seconds": 4.0,
+    "checks_per_minute": 5,
+    "prompt_sha256": "0e65300ae02f",
+    "git_commit": "1ab4130"
+  },
+  "calls": [
+    {
+      "id": "bank_scam",
+      "title": "Fake bank fraud team",
+      "kind": "scam",
+      "seconds": 50.3,
+      "warning_sign_at": 24.2,
+      "ask_at": 32.9,
+      "first_warning_at": null,
+      "first_red_at": null,
+      "checks": 5,
+      "failed_checks": 0,
+      "states": [
+        {
+          "at": 5.8,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 10.0,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 15.5,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 19.5,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 25.0,
+          "level": "green",
+          "failed": false
+        }
+      ]
+    },
+    {
+      "id": "grandchild_scam",
+      "title": "Grandchild in trouble",
+      "kind": "scam",
+      "seconds": 45.8,
+      "warning_sign_at": 19.5,
+      "ask_at": 34.0,
+      "first_warning_at": 29.7,
+      "first_red_at": null,
+      "checks": 5,
+      "failed_checks": 0,
+      "states": [
+        {
+          "at": 4.9,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 11.0,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 20.2,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 24.0,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 29.7,
+          "level": "yellow",
+          "failed": false
+        }
+      ]
+    },
+    {
+      "id": "normal_call",
+      "title": "Grandchild saying thank you",
+      "kind": "normal",
+      "seconds": 30.1,
+      "warning_sign_at": null,
+      "ask_at": null,
+      "first_warning_at": null,
+      "first_red_at": null,
+      "checks": 5,
+      "failed_checks": 0,
+      "states": [
+        {
+          "at": 4.8,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 11.1,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 16.1,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 18.9,
+          "level": "green",
+          "failed": false
+        },
+        {
+          "at": 23.1,
+          "level": "green",
+          "failed": false
+        }
+      ]
+    }
+  ]
+}

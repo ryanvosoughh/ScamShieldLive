@@ -7,12 +7,13 @@ policy picks the meter's headline and whether to say a warning out loud, and
 the new state goes to the browser.
 
 When checks run (Groq's free tier allows about 8,000 tokens a minute, and a
-check is about 1,350):
+check is about 1,350, so about 5 a minute):
   - only after new final speech, so silence costs nothing;
-  - at least check_interval seconds apart (ANALYSIS_INTERVAL_SECONDS, 4 s);
-  - at most checks_per_minute in any 60 s (CHECKS_PER_MINUTE, 5). So the start
-    of a call, where a warning matters most, is checked every 4 s, and a long
-    call settles to about one check every 12 s;
+  - at least check_interval seconds apart (ANALYSIS_INTERVAL_SECONDS, 12 s),
+    which spreads the budget evenly through the call. It used to be every 4 s
+    with a cap of 5 a minute, but the cap was used up on the small talk, and
+    the scam itself, asked for half a minute in, wasn't checked until a minute
+    had passed (eval/failure_analysis.md);
   - one at a time: speech that arrives during a check waits for the next one.
 """
 from __future__ import annotations
@@ -21,7 +22,6 @@ import asyncio
 import contextlib
 import logging
 import time
-from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from typing import Any
@@ -39,8 +39,7 @@ SendFn = Callable[[dict[str, Any]], Awaitable[None]]
 # 100 ms of audio is 3,200 bytes; anything far bigger than a second is not a
 # real-time stream, so it is dropped rather than forwarded.
 MAX_CHUNK_BYTES = 64 * 1024
-DEFAULT_CHECK_INTERVAL_SECONDS = 4.0
-DEFAULT_CHECKS_PER_MINUTE = 5
+DEFAULT_CHECK_INTERVAL_SECONDS = 12.0
 
 
 class CallSession:
@@ -52,8 +51,6 @@ class CallSession:
         scorer: RiskScorer | None = None,
         window: TranscriptWindow | None = None,
         check_interval: float = DEFAULT_CHECK_INTERVAL_SECONDS,
-        checks_per_minute: int = DEFAULT_CHECKS_PER_MINUTE,
-        rate_window_seconds: float = 60.0,  # the "minute"; shorter only in tests
         alerts: AlertPolicy | None = None,
     ) -> None:
         self._stt = stt
@@ -63,8 +60,6 @@ class CallSession:
         self.window = window or TranscriptWindow()
         self.alerts = alerts or AlertPolicy()  # the meter's headline, and when to speak
         self.check_interval = check_interval
-        self.checks_per_minute = checks_per_minute
-        self.rate_window_seconds = rate_window_seconds
         self._ended = False
         self.started_at: float | None = None
         self.audio_bytes = 0
@@ -72,7 +67,7 @@ class CallSession:
 
         self._new_speech = asyncio.Event()  # set when final text arrives
         self._check_lock = asyncio.Lock()  # never two checks at once
-        self._check_times: deque[float] = deque()  # starts of recent checks, oldest first
+        self._last_check_at: float | None = None  # when the latest check started
         self._checks_task: asyncio.Task | None = None
 
         stt.on_transcript(self.on_transcript)
@@ -128,7 +123,7 @@ class CallSession:
             if not self.window.has_enough_content():
                 return None  # e.g. just "Hello?": not worth a model call
             started = time.monotonic()
-            self._check_times.append(started)
+            self._last_check_at = started
             signal = await self._analyzer.analyze(self.window.text())
             state = self.scorer.update(text=signal)
             self.checks += 1
@@ -174,17 +169,10 @@ class CallSession:
                 logger.exception("Scam check loop error")
 
     def _seconds_until_next_slot(self) -> float:
-        """How long until a check is allowed by both the gap and the per-minute cap."""
-        now = time.monotonic()
-        while self._check_times and now - self._check_times[0] >= self.rate_window_seconds:
-            self._check_times.popleft()  # older than a minute: no longer counts
-        if not self._check_times:
+        """How long until the gap since the latest check has passed."""
+        if self._last_check_at is None:
             return 0.0
-        wait = self._check_times[-1] + self.check_interval - now
-        if len(self._check_times) >= self.checks_per_minute:
-            # Wait until the oldest check in the window is a minute old.
-            wait = max(wait, self._check_times[0] + self.rate_window_seconds - now)
-        return max(0.0, wait)
+        return max(0.0, self._last_check_at + self.check_interval - time.monotonic())
 
     async def _on_stt_error(self, message: str) -> None:
         await self._send({"type": "error", "code": "stt_failed", "message": message})

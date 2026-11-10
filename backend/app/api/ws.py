@@ -36,8 +36,8 @@ from app.scoring import RiskScorer
 from app.session import CallSession, SendFn
 from app.stt import SAMPLE_RATE, ReplaySTT, STTError
 
-# Scripted verdicts cost nothing, so a keyless demo isn't held to Groq's per-minute cap.
-UNLIMITED_CHECKS = 1_000
+# Scripted verdicts cost nothing, so a keyless demo checks more often than Groq's free tier allows.
+SCRIPTED_CHECK_INTERVAL_SECONDS = 4.0
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ async def call_socket(websocket: WebSocket) -> None:
     settings = state.settings
     send = _make_sender(websocket)
     analyzer = state.analyzer  # shared by all calls; None without a Groq key
-    checks_per_minute = settings.checks_per_minute
+    check_interval = settings.analysis_interval_seconds
     demo = None
 
     try:
@@ -62,7 +62,7 @@ async def call_socket(websocket: WebSocket) -> None:
             scripted = analyzer is None
             if scripted:
                 analyzer = ScriptedAnalyzer(scenario)
-                checks_per_minute = UNLIMITED_CHECKS
+                check_interval = min(check_interval, SCRIPTED_CHECK_INTERVAL_SECONDS)
             demo = {"scenario": scenario.id, "title": scenario.title, "scripted_analysis": scripted}
         else:
             stt = state.stt_factory(settings)
@@ -72,8 +72,7 @@ async def call_socket(websocket: WebSocket) -> None:
             analyzer=analyzer,
             scorer=RiskScorer.from_settings(settings),
             window=TranscriptWindow(window_seconds=settings.window_seconds),
-            check_interval=settings.analysis_interval_seconds,
-            checks_per_minute=checks_per_minute,
+            check_interval=check_interval,
         )
         await session.start()
     except DemoError as exc:

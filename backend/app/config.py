@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = PROJECT_ROOT / ".env"
+# Groq's free tier allows about 8,000 tokens a minute and a check is about
+# 1,350, so about 5 checks a minute: one every 12 s.
+FREE_TIER_CHECK_INTERVAL_SECONDS = 12.0
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,6 @@ class Settings:
     risk_yellow_threshold: int
     risk_red_threshold: int
     analysis_interval_seconds: float
-    checks_per_minute: int
     window_seconds: float
     host: str
     port: int
@@ -58,8 +60,7 @@ class Settings:
             live_model=_text(env, "LIVE_MODEL", "openai/gpt-oss-120b"),
             risk_yellow_threshold=_number(env, "RISK_YELLOW_THRESHOLD", 40, int),
             risk_red_threshold=_number(env, "RISK_RED_THRESHOLD", 70, int),
-            analysis_interval_seconds=_number(env, "ANALYSIS_INTERVAL_SECONDS", 4.0, float),
-            checks_per_minute=_number(env, "CHECKS_PER_MINUTE", 5, int),
+            analysis_interval_seconds=_number(env, "ANALYSIS_INTERVAL_SECONDS", 12.0, float),
             window_seconds=_number(env, "WINDOW_SECONDS", 30.0, float),
             host=_text(env, "HOST", "127.0.0.1"),
             port=_number(env, "PORT", 8000, int),
@@ -79,6 +80,12 @@ class Settings:
         if not self.groq_api_key and not self.demo_mode:
             warnings.append(
                 "GROQ_API_KEY is not set. Live calls won't be checked for scams; demo calls use scripted verdicts."
+            )
+        if self.groq_api_key and self.analysis_interval_seconds < FREE_TIER_CHECK_INTERVAL_SECONDS:
+            warnings.append(
+                f"ANALYSIS_INTERVAL_SECONDS is {self.analysis_interval_seconds:g}. On Groq's free tier, checks less than "
+                f"{FREE_TIER_CHECK_INTERVAL_SECONDS:g} s apart run into its rate limit and stop answering. "
+                "Fine on a paid tier."
             )
         if not 0 <= self.risk_yellow_threshold < self.risk_red_threshold <= 100:
             errors.append(

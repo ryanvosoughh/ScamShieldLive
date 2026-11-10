@@ -48,6 +48,12 @@ def test_keys_never_appear_in_repr():
 
 def test_check_spacing_defaults():
     settings = Settings.from_env({"DEMO_MODE": "true"})
-    assert settings.analysis_interval_seconds == 4.0
-    assert settings.checks_per_minute == 5
+    assert settings.analysis_interval_seconds == 12.0
     assert settings.window_seconds == 30.0
+
+
+def test_checks_too_close_for_groqs_free_tier_are_a_warning():
+    close = Settings.from_env({"DEEPGRAM_API_KEY": "dg", "GROQ_API_KEY": "g", "ANALYSIS_INTERVAL_SECONDS": "4"})
+    assert any("rate limit" in warning for warning in close.validate())
+    spread = Settings.from_env({"DEEPGRAM_API_KEY": "dg", "GROQ_API_KEY": "g"})
+    assert spread.validate() == []

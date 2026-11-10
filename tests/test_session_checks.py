@@ -59,7 +59,7 @@ def final(text, start=0.0, end=3.0):
     return TranscriptSegment(text, True, start, end, 0.9)
 
 
-def run_call(scenario, analyzer=None, interval=0.2, per_minute=5, minute=60.0):
+def run_call(scenario, analyzer=None, interval=0.2):
     """Start a session, run the scenario against it, end it, and return what was sent."""
     sent = []
 
@@ -72,8 +72,6 @@ def run_call(scenario, analyzer=None, interval=0.2, per_minute=5, minute=60.0):
             send,
             analyzer=analyzer,
             check_interval=interval,
-            checks_per_minute=per_minute,
-            rate_window_seconds=minute,
         )
         await session.start()
         try:
@@ -138,20 +136,20 @@ def test_checks_are_spaced_out_by_the_interval():
     assert analyzer.started[1] - analyzer.started[0] >= 0.29
 
 
-def test_no_more_checks_than_the_per_minute_cap():
+def test_checks_keep_coming_through_the_call():
+    # The bug the evaluation found: a cap of 5 a minute was used up on the small
+    # talk, so speech later in the call went unchecked. Now every gap gets a check.
     analyzer = FakeAnalyzer()
 
     async def scenario(session):
-        for n in range(3):
+        for n in range(8):
             await session.on_transcript(final(f"{SCAM_LINE} Line {n}.", 3 * n, 3 * n + 3))
-            await asyncio.sleep(0.05)
-        await asyncio.sleep(0.5)
+            await asyncio.sleep(0.06)
+        await asyncio.sleep(0.1)
 
-    # A pretend "minute" of 0.4 s with room for 2 checks, and no gap between checks.
-    run_call(scenario, analyzer, interval=0.0, per_minute=2, minute=0.4)
-    assert len(analyzer.started) == 3
-    assert analyzer.started[1] - analyzer.started[0] < 0.2  # the second fits in the minute
-    assert analyzer.started[2] - analyzer.started[0] >= 0.39  # the third waits for the first to age out
+    run_call(scenario, analyzer, interval=0.05)
+    assert len(analyzer.started) >= 7
+    assert "Line 7." in analyzer.texts[-1]  # the last thing said was checked
 
 
 def test_silence_costs_nothing():

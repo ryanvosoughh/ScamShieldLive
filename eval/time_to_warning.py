@@ -31,8 +31,8 @@ from app.session import CallSession  # noqa: E402
 from app.stt import ReplaySTT  # noqa: E402
 
 TIMING_FILE = ROOT / "eval" / "timing.json"
-# A call can use up to 5 checks a minute; a pause between calls keeps the three
-# of them together under Groq's free-tier limit.
+# A pause between calls, so the end of one and the start of the next don't
+# put two calls' checks into the same minute of Groq's free-tier limit.
 PAUSE_BETWEEN_CALLS_SECONDS = 30.0
 
 
@@ -60,7 +60,6 @@ async def time_call(scenario: Scenario, analyzer, settings: Settings) -> dict:
         scorer=RiskScorer.from_settings(settings),
         window=TranscriptWindow(window_seconds=settings.window_seconds),
         check_interval=settings.analysis_interval_seconds,
-        checks_per_minute=settings.checks_per_minute,
     )
     started = time.monotonic()
     await session.start()
@@ -119,7 +118,6 @@ def main() -> int:
         "yellow_threshold": settings.risk_yellow_threshold,
         "red_threshold": settings.risk_red_threshold,
         "check_interval_seconds": settings.analysis_interval_seconds,
-        "checks_per_minute": settings.checks_per_minute,
         "prompt_sha256": prompt_fingerprint(),
         "git_commit": git_commit(),
     }

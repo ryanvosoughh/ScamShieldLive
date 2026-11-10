@@ -3,13 +3,14 @@
 Why each mistake in the evaluation happened, and what would fix it. The numbers are in `results.md`;
 how the cases were made is in `README.md`.
 
-This file is written by hand, unlike `results.md`, so it describes these two runs and needs updating
+This file is written by hand, unlike `results.md`, so it describes these runs and needs updating
 if they are run again:
 
 | Run | When (UTC) | Prompt | Code |
 |---|---|---|---|
 | 24 test cases (`results.json`) | 10 Nov 2026, 13:59 | `0e65300ae02f` | `a1ec0c1` |
-| Demo-call timing (`timing.json`) | 10 Nov 2026, 14:50 | `0e65300ae02f` | `1ab4130` |
+| Demo-call timing before the pacing fix (`timing_baseline.json`) | 10 Nov 2026, 14:50 | `0e65300ae02f` | `1ab4130` |
+| Demo-call timing after the pacing fix (`timing.json`) | 10 Nov 2026, 21:01 | `0e65300ae02f` | `ce6b9d0` plus the fix, before it was committed |
 
 
 
@@ -19,7 +20,7 @@ if they are run again:
 |---|---|---|---|
 | `n06_grandson_fixes_laptop` | False alarm | A signal outside the words: is the caller a saved contact? | Keep the label, accept the false alarm |
 | `s04_bank_safe_account_polite` | Near miss | Already handled: the red-flag rule in the scorer | No change; add more polite cases |
-| Demo calls with a Groq key | Late or missing warnings | Spread the checks through the call | Kept the 4 s pacing for now; a known limit |
+| Demo calls with a Groq key | Late or missing warnings | Spread the checks through the call | **Fixed:** one check every 12 s; red 7 to 9 s after the ask |
 
 No scam in the 24 cases was missed.
 
@@ -68,9 +69,9 @@ number, so a polite tone can't talk the score down. Two cautions:
 
 **Decision.** No change to the code or the prompt.
 
-## 3. Late warnings on the demo calls (the check pacing)
+## 3. Late warnings on the demo calls (the check pacing): fixed
 
-**What happened.** Played in real time with the real check on Groq, the three demo calls gave:
+**What happened.** Played in real time with the real check on Groq, the three demo calls first gave:
 
 | Call | Checks at | The ask is said at | Call ends | Result |
 |---|---|---|---|---|
@@ -87,20 +88,30 @@ usually build up first and ask later, so this is the worst moment to stop checki
 The 24 test cases couldn't show this, because each one is a single check on a short call. Without a
 Groq key the demo calls use scripted verdicts, which have no cap, so the keyless demo isn't affected.
 
-**What would fix it.**
+**What would fix it.** I compared four options:
 
 | Option | Effect | Cost |
 |---|---|---|
-| One check every 12 s, no cap | Checks spread through the call; red an estimated 7 to 12 s after the ask (not yet measured) | The first warning can come up to 12 s later |
+| **One check every 12 s, no cap (chosen)** | Checks spread through the call; red an estimated 7 to 12 s after the ask | The first warning can come up to 12 s later |
 | A paid Groq tier, with `CHECKS_PER_MINUTE=15` in `.env` | Checks every 4 s all through the call; a settings change only | Money |
 | Smaller checks (a shorter prompt or window) | More checks fit in a minute | Accuracy would need measuring again |
 | Widen the gap as checks are used | An earlier first warning than one every 12 s | More code |
 
-**Decision.** I kept the 4 s pacing for now. The effect: on Groq's free tier, a call that is still
-going after its first 5 checks isn't checked again until a minute has passed, so a scam asked for in
-that gap is warned about late, not at the moment it is asked. In a longer call the warning still
-comes once the minute is up (an earlier live test turned red at 70 s), and a failed or missing check
-is never shown as safe.
+**Decision.** I chose one check every 12 s. It uses the same budget (5 checks a minute), spread
+evenly, and it made the code simpler: the per-minute counter and the `CHECKS_PER_MINUTE` setting are
+gone. Keyless demos still check every 4 s, because scripted verdicts cost nothing.
+
+**After the fix.** The same three calls, played again the same way:
+
+| Call | Checks at | The ask is said at | Result |
+|---|---|---|---|
+| Fake bank fraud team | 5.8, 17.5, 29.9, 41.8 s | 32.9 s | **Red at 41.8 s**, 8.9 s after the ask |
+| Grandchild in trouble | 5.6, 16.8, 29.5, 41.3 s | 34.0 s | Yellow at 29.5 s, **red at 41.3 s**, 7.3 s after the ask |
+| Grandchild saying thank you | 4.7, 17.0, 28.9 s | – | Stayed green (correct) |
+
+It used 11 checks instead of 15, and none failed. What is left: a warning can still come up to about
+12 seconds after the words that give a scam away, plus the second or so a check takes. A paid Groq
+tier could check more often by lowering `ANALYSIS_INTERVAL_SECONDS`.
 
 ## How far to trust these numbers
 
