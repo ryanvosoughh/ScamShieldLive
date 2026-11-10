@@ -7,7 +7,6 @@ def test_defaults_are_sensible():
     settings = Settings.from_env({"DEEPGRAM_API_KEY": "dg"})
     assert settings.demo_mode is False
     assert settings.live_model == "openai/gpt-oss-120b"
-    assert settings.summary_model == "openai/gpt-oss-120b"
     assert settings.risk_yellow_threshold < settings.risk_red_threshold
 
 
@@ -27,11 +26,13 @@ def test_missing_groq_key_is_only_a_warning_in_phase_1():
     assert any("GROQ_API_KEY" in w for w in warnings)
 
 
-def test_bad_values_are_all_reported_together():
-    with pytest.raises(ConfigError) as info:
-        Settings.from_env({"DEMO_MODE": "maybe", "PORT": "eighty"})
-    assert "DEMO_MODE" in str(info.value)
-    assert "PORT" in str(info.value)
+def test_a_bad_value_is_reported_by_name():
+    with pytest.raises(ConfigError, match="DEMO_MODE must be true or false"):
+        Settings.from_env({"DEMO_MODE": "maybe"})
+    with pytest.raises(ConfigError, match="PORT must be a whole number"):
+        Settings.from_env({"PORT": "eighty"})
+    with pytest.raises(ConfigError, match="WINDOW_SECONDS must be a number"):
+        Settings.from_env({"WINDOW_SECONDS": "half a minute"})
 
 
 def test_thresholds_must_be_ordered():
@@ -45,9 +46,8 @@ def test_keys_never_appear_in_repr():
     assert "secret" not in repr(settings)
 
 
-def test_check_spacing_defaults_and_limits():
+def test_check_spacing_defaults():
     settings = Settings.from_env({"DEMO_MODE": "true"})
     assert settings.analysis_interval_seconds == 4.0
     assert settings.checks_per_minute == 5
-    with pytest.raises(ConfigError, match="CHECKS_PER_MINUTE"):
-        Settings.from_env({"DEMO_MODE": "true", "CHECKS_PER_MINUTE": "0"}).validate()
+    assert settings.window_seconds == 30.0

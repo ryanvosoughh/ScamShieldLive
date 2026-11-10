@@ -32,7 +32,6 @@ class Settings:
     groq_api_key: str = field(repr=False)
     deepgram_model: str
     live_model: str
-    summary_model: str
     risk_yellow_threshold: int
     risk_red_threshold: int
     analysis_interval_seconds: float
@@ -51,24 +50,20 @@ class Settings:
     @classmethod
     def from_env(cls, env: Mapping[str, str]) -> Settings:
         """Build Settings from a plain mapping. Kept separate from load() so tests need no files."""
-        reader = _EnvReader(env)
-        settings = cls(
-            demo_mode=reader.boolean("DEMO_MODE", False),
-            deepgram_api_key=reader.text("DEEPGRAM_API_KEY", ""),
-            groq_api_key=reader.text("GROQ_API_KEY", ""),
-            deepgram_model=reader.text("DEEPGRAM_MODEL", "nova-3"),
-            live_model=reader.text("LIVE_MODEL", "openai/gpt-oss-120b"),
-            summary_model=reader.text("SUMMARY_MODEL", "openai/gpt-oss-120b"),
-            risk_yellow_threshold=reader.integer("RISK_YELLOW_THRESHOLD", 40),
-            risk_red_threshold=reader.integer("RISK_RED_THRESHOLD", 70),
-            analysis_interval_seconds=reader.number("ANALYSIS_INTERVAL_SECONDS", 4.0),
-            checks_per_minute=reader.integer("CHECKS_PER_MINUTE", 5),
-            window_seconds=reader.number("WINDOW_SECONDS", 30.0),
-            host=reader.text("HOST", "127.0.0.1"),
-            port=reader.integer("PORT", 8000),
+        return cls(
+            demo_mode=_flag(env, "DEMO_MODE", False),
+            deepgram_api_key=_text(env, "DEEPGRAM_API_KEY", ""),
+            groq_api_key=_text(env, "GROQ_API_KEY", ""),
+            deepgram_model=_text(env, "DEEPGRAM_MODEL", "nova-3"),
+            live_model=_text(env, "LIVE_MODEL", "openai/gpt-oss-120b"),
+            risk_yellow_threshold=_number(env, "RISK_YELLOW_THRESHOLD", 40, int),
+            risk_red_threshold=_number(env, "RISK_RED_THRESHOLD", 70, int),
+            analysis_interval_seconds=_number(env, "ANALYSIS_INTERVAL_SECONDS", 4.0, float),
+            checks_per_minute=_number(env, "CHECKS_PER_MINUTE", 5, int),
+            window_seconds=_number(env, "WINDOW_SECONDS", 30.0, float),
+            host=_text(env, "HOST", "127.0.0.1"),
+            port=_number(env, "PORT", 8000, int),
         )
-        reader.raise_if_errors()
-        return settings
 
     def validate(self) -> list[str]:
         """Fail fast on anything that would break the app. Returns non-fatal warnings."""
@@ -85,20 +80,11 @@ class Settings:
             warnings.append(
                 "GROQ_API_KEY is not set. Live calls won't be checked for scams; demo calls use scripted verdicts."
             )
-
         if not 0 <= self.risk_yellow_threshold < self.risk_red_threshold <= 100:
             errors.append(
                 "Risk thresholds must satisfy 0 <= RISK_YELLOW_THRESHOLD < RISK_RED_THRESHOLD <= 100 "
                 f"(got {self.risk_yellow_threshold} and {self.risk_red_threshold})."
             )
-        if self.analysis_interval_seconds <= 0:
-            errors.append("ANALYSIS_INTERVAL_SECONDS must be greater than 0.")
-        if self.checks_per_minute < 1:
-            errors.append("CHECKS_PER_MINUTE must be at least 1.")
-        if self.window_seconds < self.analysis_interval_seconds:
-            errors.append("WINDOW_SECONDS must be at least ANALYSIS_INTERVAL_SECONDS.")
-        if not 1 <= self.port <= 65535:
-            errors.append(f"PORT must be between 1 and 65535 (got {self.port}).")
 
         if errors:
             raise ConfigError("\n  - ".join(["Configuration problem:", *errors]))
@@ -118,53 +104,28 @@ def load_or_exit() -> Settings:
     return settings
 
 
-class _EnvReader:
-    """Parses typed values and collects every bad value, so the user sees all problems at once."""
+def _text(env: Mapping[str, str], name: str, default: str) -> str:
+    """The setting with spaces trimmed, or the default when it is missing or blank."""
+    return (env.get(name) or "").strip() or default
 
-    def __init__(self, env: Mapping[str, str]) -> None:
-        self._env = env
-        self._errors: list[str] = []
 
-    def _raw(self, name: str) -> str | None:
-        value = self._env.get(name)
-        if value is None or value.strip() == "":
-            return None
-        return value.strip()
-
-    def text(self, name: str, default: str) -> str:
-        return self._raw(name) or default
-
-    def boolean(self, name: str, default: bool) -> bool:
-        raw = self._raw(name)
-        if raw is None:
-            return default
-        if raw.lower() in {"1", "true", "yes", "on"}:
-            return True
-        if raw.lower() in {"0", "false", "no", "off"}:
-            return False
-        self._errors.append(f"{name} must be true or false (got {raw!r}).")
+def _flag(env: Mapping[str, str], name: str, default: bool) -> bool:
+    raw = _text(env, name, "").lower()
+    if not raw:
         return default
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    raise ConfigError(f"Configuration problem: {name} must be true or false (got {raw!r}).")
 
-    def integer(self, name: str, default: int) -> int:
-        raw = self._raw(name)
-        if raw is None:
-            return default
-        try:
-            return int(raw)
-        except ValueError:
-            self._errors.append(f"{name} must be a whole number (got {raw!r}).")
-            return default
 
-    def number(self, name: str, default: float) -> float:
-        raw = self._raw(name)
-        if raw is None:
-            return default
-        try:
-            return float(raw)
-        except ValueError:
-            self._errors.append(f"{name} must be a number (got {raw!r}).")
-            return default
-
-    def raise_if_errors(self) -> None:
-        if self._errors:
-            raise ConfigError("\n  - ".join(["Configuration problem:", *self._errors]))
+def _number(env: Mapping[str, str], name: str, default, kind):
+    raw = _text(env, name, "")
+    if not raw:
+        return default
+    try:
+        return kind(raw)
+    except ValueError:
+        what = "a whole number" if kind is int else "a number"
+        raise ConfigError(f"Configuration problem: {name} must be {what} (got {raw!r}).") from None

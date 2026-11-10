@@ -5,8 +5,7 @@ fastapi==0.162.1        # HTTP + WebSocket server
 uvicorn==0.54.0         # ASGI server that runs FastAPI
 websockets==17.4        # uvicorn's WebSocket backend, and our client to Deepgram
 python-dotenv==1.2.4    # reads .env so keys never live in code
-groq==1.7.0             # Groq SDK for the live and summary models (used from Phase 2)
-numpy==2.5.4            # tone features (used from Phase 3)
+groq==1.7.0             # Groq SDK for the live scam check
 
 # Tests
 pytest==9.2.0

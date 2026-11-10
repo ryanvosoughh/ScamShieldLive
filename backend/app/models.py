@@ -1,11 +1,7 @@
-"""Plain data containers shared across the app. No logic lives here.
-
-TimelineEvent is added in Phase 3, when the code that uses it exists.
-"""
+"""Plain data containers shared across the app. No logic lives here."""
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -30,8 +26,6 @@ class TranscriptSegment:
     start: float  # seconds since the call started, on the audio clock
     end: float
     confidence: float  # 0-1, as reported by the engine
-    # Server clock when the segment arrived; used for latency measurement later.
-    received_at: float = field(default_factory=time.monotonic)
 
 
 @dataclass(frozen=True)
