@@ -12,7 +12,6 @@
 //   A demo call also ends by itself when its script is over.
 
 import { TARGET_RATE } from "./audio-format.js";
-import { checkBrowser, supportMessage } from "./browser-support.js";
 import { DemoSource } from "./demo-source.js";
 import { ErrorBanner } from "./error-banner.js";
 import { FileSource } from "./file-source.js";
@@ -56,13 +55,12 @@ const els = {
 const view = new TranscriptView(document.getElementById("transcript"));
 const meter = new RiskMeter(document.getElementById("risk"));
 const banner = new ErrorBanner(els.banner);
-const support = checkBrowser();
 const speech = new SpeechAlert({ onStart: pauseMic, onEnd: resumeMic });
 
 let call = null; // the call in progress, or null
 let micPausedFor = null; // the call whose mic is paused while a warning is spoken
 let demoCalls = []; // from /api/demo-calls
-let liveAllowed = true; // false when the server runs in demo mode, or the browser can't capture any audio
+let liveAllowed = true; // false when the server runs in demo mode
 
 els.start.addEventListener("click", () => startCall((handlers) => new MicCapture(handlers)));
 els.fileBtn.addEventListener("click", () => els.fileInput.click());
@@ -85,15 +83,8 @@ els.stop.addEventListener("click", () => {
 init();
 
 async function init() {
-  const unsupported = supportMessage(support);
-  if (unsupported) banner.show("browser", unsupported.text, { kind: unsupported.kind, page: true });
-  if (!support.basics) {
-    setBusy(true);
-    els.stop.disabled = true;
-    return;
-  }
   const [health, calls] = await Promise.all([getJson("/health"), getJson("/api/demo-calls")]);
-  if (!health) banner.show("server", SERVER_DOWN);
+  if (!health) banner.show(SERVER_DOWN);
   demoCalls = Array.isArray(calls) ? calls : [];
   els.scenario.replaceChildren(
     ...demoCalls.map((demoCall) =>
@@ -108,8 +99,6 @@ async function init() {
   if (health?.mode === "demo") {
     liveAllowed = false;
     notes.push("This server is in demo mode, so live calls are switched off.");
-  } else if (!support.mic && !support.file) {
-    liveAllowed = false; // the banner says why
   } else if (health && !health.keys?.groq) {
     notes.push("No Groq key is set, so live calls are written out but not checked. Demo calls still work.");
   }
@@ -157,7 +146,7 @@ async function startCall(makeSource, { scenario = null } = {}) {
   });
 
   speech.cancel();
-  banner.clearCall();
+  banner.hide();
   view.clear();
   meter.idle();
   els.lag.textContent = "";
@@ -202,7 +191,7 @@ function onServerMessage(current, message) {
     case "error":
       // The server follows every error with "ended", which calls finish().
       current.error = message.message;
-      banner.show("call", message.message);
+      banner.show(message.message);
       current.source.stop();
       break;
     case "ended":
@@ -247,7 +236,7 @@ function finish(current, errorMessage = null) {
 
   meter.callEnded();
   view.endCall();
-  if (errorMessage) banner.show("call", errorMessage);
+  if (errorMessage) banner.show(errorMessage);
   setBusy(false);
   setStatus(errorMessage ? "error" : "idle", errorMessage ? "Stopped" : "Ready");
 }
@@ -280,8 +269,8 @@ function resumeMic() {
 }
 
 function setBusy(busy) {
-  els.start.disabled = busy || !liveAllowed || !support.mic;
-  els.fileBtn.disabled = busy || !liveAllowed || !support.file;
+  els.start.disabled = busy || !liveAllowed;
+  els.fileBtn.disabled = busy || !liveAllowed;
   els.demoBtn.disabled = busy || !demoCalls.length;
   els.scenario.disabled = busy;
   els.modeLive.disabled = busy || !liveAllowed;

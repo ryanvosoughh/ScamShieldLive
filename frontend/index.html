@@ -79,15 +79,5 @@
       <footer class="foot">English only for now. Works best in Chrome or Edge.</footer>
     </div>
     <script type="module" src="js/app.js"></script>
-    <script nomodule>
-      // Runs only in browsers too old for app.js, which would otherwise leave dead buttons.
-      (function () {
-        var banner = document.getElementById("error-banner");
-        banner.textContent = "This browser is too old for ScamShield. Use a recent Chrome, Edge or Firefox.";
-        banner.removeAttribute("hidden");
-        var buttons = document.getElementsByTagName("button");
-        for (var i = 0; i < buttons.length; i++) buttons[i].disabled = true;
-      })();
-    </script>
   </body>
 </html>
