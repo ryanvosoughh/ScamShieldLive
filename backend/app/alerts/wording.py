@@ -7,20 +7,16 @@ Rules every line follows:
 - Never call a call "safe". GREEN only means nothing worrying has been heard yet.
 - A warning always says what to do, not only that something is wrong.
 - Spoken lines are short: the person is still on the call, listening to the caller.
-- GREEN is never spoken. Talking over a normal call is an interruption, and
-  "this call is fine" is a promise the app can't make.
-- UNKNOWN is spoken. Someone relying on the voice would otherwise take silence
-  to mean nothing is wrong, when the check has stopped working.
-
-Gran mode is for an older person who may panic or freeze when warned: fewer
-words, everyday language ("a trick", "numbers" rather than "scam", "codes"),
-one short sentence per idea, and nothing that sounds like a telling-off.
+- Only warnings (YELLOW and RED) are spoken. Talking over a normal call is an
+  interruption, and "this call is fine" is a promise the app can't make. A
+  check that failed (UNKNOWN) shows on the meter but isn't worth interrupting
+  the call for: one rate-limit blip would otherwise be said out loud.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.models import Persona, RiskLevel
+from app.models import RiskLevel
 
 
 @dataclass(frozen=True)
@@ -29,50 +25,28 @@ class AlertLines:
     spoken: str | None  # None: stay quiet at this level
 
 
-WORDING: dict[Persona, dict[RiskLevel, AlertLines]] = {
-    Persona.STANDARD: {
-        RiskLevel.GREEN: AlertLines(
-            screen="No warning signs so far",
-            spoken=None,
-        ),
-        RiskLevel.YELLOW: AlertLines(
-            screen="Be careful",
-            spoken="Be careful. This call has some warning signs. "
-            "Don't agree to send money or share any details yet.",
-        ),
-        RiskLevel.RED: AlertLines(
-            screen="This sounds like a scam",
-            spoken="Warning. This sounds like a scam. Don't send money or share any codes. "
-            "Hang up and call back on a number you already know.",
-        ),
-        RiskLevel.UNKNOWN: AlertLines(
-            screen="Couldn't check the call",
-            spoken="The scam check isn't working right now. "
-            "Don't send money or share any codes on this call.",
-        ),
-    },
-    Persona.GRAN: {
-        RiskLevel.GREEN: AlertLines(
-            screen="Nothing worrying yet",
-            spoken=None,
-        ),
-        RiskLevel.YELLOW: AlertLines(
-            screen="Go carefully",
-            spoken="Go carefully. Don't send any money yet.",
-        ),
-        RiskLevel.RED: AlertLines(
-            screen="This might be a trick",
-            spoken="This might be a trick. Don't send money or give any numbers. "
-            "Hang up and call someone you trust.",
-        ),
-        RiskLevel.UNKNOWN: AlertLines(
-            screen="Can't check right now",
-            spoken="I can't check this call right now. Don't send any money.",
-        ),
-    },
+WORDING: dict[RiskLevel, AlertLines] = {
+    RiskLevel.GREEN: AlertLines(
+        screen="No warning signs so far",
+        spoken=None,
+    ),
+    RiskLevel.YELLOW: AlertLines(
+        screen="Be careful",
+        spoken="Be careful. This call has some warning signs. "
+        "Don't agree to send money or share any details yet.",
+    ),
+    RiskLevel.RED: AlertLines(
+        screen="This sounds like a scam",
+        spoken="Warning. This sounds like a scam. Don't send money or share any codes. "
+        "Hang up and call back on a number you already know.",
+    ),
+    RiskLevel.UNKNOWN: AlertLines(
+        screen="Couldn't check the call",
+        spoken=None,
+    ),
 }
 
 
-def lines_for(level: RiskLevel, persona: Persona = Persona.STANDARD) -> AlertLines:
-    """The screen and spoken line for this level, in this persona's wording."""
-    return WORDING[persona][level]
+def lines_for(level: RiskLevel) -> AlertLines:
+    """The screen and spoken line for this level."""
+    return WORDING[level]

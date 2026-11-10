@@ -4,7 +4,7 @@ import json
 import time
 
 from app.alerts import lines_for
-from app.models import Persona, RiskLevel, TextSignal, TranscriptSegment
+from app.models import RiskLevel, TextSignal, TranscriptSegment
 from app.session import CallSession, state_message
 from app.stt import SpeechToTextClient
 
@@ -309,16 +309,11 @@ def test_the_same_warning_is_not_said_again_on_the_next_check():
     assert {s["headline"] for s in states(sent)} == {lines_for(RiskLevel.RED).screen}  # still on screen
 
 
-def test_quiet_mode_and_persona_reach_the_alert():
-    async def scenario(session):
-        session.persona = Persona.GRAN
-        session.quiet_mode = True
-        await session.on_transcript(final(SCAM_LINE))
-        await asyncio.sleep(0.05)
-
-    _, sent = run_call(scenario, FakeAnalyzer(risk=90))
+def test_a_failed_first_check_is_shown_but_not_said_out_loud():
+    # One rate-limit blip at the start of a call must not interrupt it.
+    _, sent = check_each_line(FakeAnalyzer(signals=[FAILED]), 1)
     [state] = states(sent)
-    assert state["headline"] == lines_for(RiskLevel.RED, Persona.GRAN).screen
+    assert state["headline"] == lines_for(RiskLevel.UNKNOWN).screen
     assert state["speak"] is None
 
 

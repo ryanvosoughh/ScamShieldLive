@@ -28,7 +28,7 @@ from typing import Any
 
 from app.alerts import Alert, AlertPolicy, lines_for
 from app.analysis import ScamAnalyzer, TranscriptWindow
-from app.models import Persona, RiskState, TextSignal, TranscriptSegment
+from app.models import RiskState, TextSignal, TranscriptSegment
 from app.scoring import RiskScorer
 from app.stt import BYTES_PER_SAMPLE, SAMPLE_RATE, SpeechToTextClient
 
@@ -71,8 +71,6 @@ class CallSession:
         self.scorer = scorer or RiskScorer()
         self.window = window or TranscriptWindow()
         self.alerts = alerts or AlertPolicy()  # the meter's headline, and when to speak
-        self.persona = Persona.STANDARD  # the page will let people change these two (3C)
-        self.quiet_mode = False
         self.check_interval = check_interval
         self.checks_per_minute = checks_per_minute
         self.rate_window_seconds = rate_window_seconds
@@ -155,7 +153,7 @@ class CallSession:
                 took,
                 f" ({signal.error})" if signal.error else "",
             )
-            alert = self.alerts.decide(state, self.persona, self.quiet_mode)
+            alert = self.alerts.decide(state)
             if alert.spoken:
                 logger.info("Speaking the %s alert", alert.level.value)
             await self._send(state_message(state, alert))  # 2.32

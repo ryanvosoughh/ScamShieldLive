@@ -17,11 +17,6 @@ class RiskLevel(str, Enum):
     UNKNOWN = "unknown"
 
 
-class Persona(str, Enum):
-    STANDARD = "standard"
-    GRAN = "gran"  # larger text, calmer wording, spoken alerts
-
-
 @dataclass(frozen=True)
 class TranscriptSegment:
     """One piece of text from the speech-to-text engine.
