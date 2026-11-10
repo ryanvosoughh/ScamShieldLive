@@ -25,8 +25,8 @@ OTHER_SCAM = "other"
 NO_SCAM = "none"
 
 # Requests that make a call high risk on their own, however politely they are
-# put. The model reports which ones it heard, and the analyser then keeps the
-# risk at or above the red threshold, so a calm tone can't talk the score down.
+# put. The model reports which ones it heard, and the scorer then turns any of
+# them into red, so a calm tone can't talk the score down.
 RED_FLAGS: dict[str, str] = {
     "asks_for_code": "asks for a code, PIN or password",
     "unusual_payment": "wants payment by gift cards, crypto, wire transfer or a courier pickup",
