@@ -236,14 +236,6 @@ def test_the_banner_comes_down_when_a_check_answers_again():
     assert session.checks == 3
 
 
-def test_notices_from_speech_to_text_reach_the_browser():
-    async def scenario(session):
-        await session._stt._emit_notice("no_words", "Speech is coming through, but no words are being recognised.")
-
-    _, sent = run_call(scenario)
-    assert notices(sent) == [("no_words", "Speech is coming through, but no words are being recognised.")]
-
-
 def test_ending_the_call_stops_a_check_in_flight():
     analyzer = FakeAnalyzer(delay=1.0)
 

@@ -88,7 +88,6 @@ class CallSession:
 
         stt.on_transcript(self.on_transcript)
         stt.on_error(self._on_stt_error)
-        stt.on_notice(self._send_notice)
 
     @property
     def audio_seconds(self) -> float:

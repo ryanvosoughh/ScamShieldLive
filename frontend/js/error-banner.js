@@ -2,8 +2,8 @@
 //
 // Two kinds of message:
 //   error   something stopped the call or the page (mic blocked, server not running)
-//   notice  a problem the call carries on through (the scam check isn't answering,
-//           no words are recognised). Calmer colours, and the call keeps going.
+//   notice  a problem the call carries on through (the scam check isn't answering).
+//           Calmer colours, and the call keeps going.
 //
 // Every message has a code. A new message with the same code replaces the old
 // one instead of piling up, and the server can take a notice down by its code.
