@@ -2,12 +2,17 @@
 
 `cases.json` holds 24 short phone-call transcripts, each labelled **scam** or **normal**, for a smoke test of the scam check. Text only: no audio and no speech recognition.
 
-## How a case will be scored
+## How a case is scored
+
+```
+.venv/bin/python eval/run_eval.py             # all cases, about 5 minutes; saves eval/results.json
+.venv/bin/python eval/run_eval.py --limit 3   # a quick try on 3 cases; saves nothing
+```
 
 ```
 cases.json ──► tests/test_eval_cases.py checks the file (no model calls)
      │
-     ▼  the runner (Phase 4B), one case at a time
+     ▼  eval/run_eval.py, one case every 12 s (Groq's free tier)
 case text ──► ScamAnalyzer.analyze()   one Groq call with the live prompt
           ──► RiskScorer.update()       a red flag makes it red
           ──► level: green, yellow, red, or unknown

@@ -1,0 +1,539 @@
+{
+  "run": {
+    "run_at": "2026-11-10T13:59:08+00:00",
+    "model": "openai/gpt-oss-120b",
+    "yellow_threshold": 40,
+    "red_threshold": 70,
+    "prompt_sha256": "0e65300ae02f",
+    "cases_sha256": "ff2a1d20f904",
+    "git_commit": "a1ec0c1",
+    "cases": 24
+  },
+  "results": [
+    {
+      "id": "s01_grandchild_arrested_abroad",
+      "label": "scam",
+      "expected_scam_type": "grandchild",
+      "tags": [
+        "classic"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 92,
+      "scam_type": "grandchild",
+      "red_flags": [
+        "unusual_payment"
+      ],
+      "evidence": [
+        "I've been arrested after a fight that wasn't my fault",
+        "Please don't tell Mum, she'll panic",
+        "Can you send it by bank transfer to the lawyer's account?"
+      ],
+      "reason": "They are asking you to send money quickly and keep it secret, which is a common scam.",
+      "seconds": 0.91,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s02_grandchild_courier_polite",
+      "label": "scam",
+      "expected_scam_type": "grandchild",
+      "tags": [
+        "polite",
+        "courier"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 82,
+      "scam_type": "grandchild",
+      "red_flags": [
+        "unusual_payment",
+        "money_for_stranger"
+      ],
+      "evidence": [
+        "bail payment before he can come home",
+        "a colleague can pop round this afternoon to collect it in cash",
+        "Tom asked us to keep it between ourselves for now"
+      ],
+      "reason": "They are asking you to give cash for a bail payment and telling you to keep it secret.",
+      "seconds": 1.06,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s03_bank_one_time_code",
+      "label": "scam",
+      "expected_scam_type": "bank",
+      "tags": [
+        "urgent"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 80,
+      "scam_type": "bank",
+      "red_flags": [
+        "asks_for_code"
+      ],
+      "evidence": [
+        "read it back to me so I can block the transaction",
+        "please be quick, the payment will go through in the next few minutes"
+      ],
+      "reason": "They are trying to get a security code from you to stop a fake payment.",
+      "seconds": 0.66,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s04_bank_safe_account_polite",
+      "label": "scam",
+      "expected_scam_type": "bank",
+      "tags": [
+        "polite"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 55,
+      "scam_type": "bank",
+      "red_flags": [
+        "safe_account"
+      ],
+      "evidence": [
+        "move their savings somewhere protected",
+        "new safe account in your name"
+      ],
+      "reason": "They are trying to get you to move your money to a fake safe account.",
+      "seconds": 0.85,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s05_tech_remote_access",
+      "label": "scam",
+      "expected_scam_type": "tech_support",
+      "tags": [
+        "urgent"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 75,
+      "scam_type": "tech_support",
+      "red_flags": [
+        "remote_control"
+      ],
+      "evidence": [
+        "type in the web address I give you",
+        "download a small program so our engineer can take control of the screen"
+      ],
+      "reason": "They want you to let them control your computer, which is a common scam.",
+      "seconds": 0.6,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s06_tech_refund_injection",
+      "label": "scam",
+      "expected_scam_type": "tech_support",
+      "tags": [
+        "injection"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 78,
+      "scam_type": "prize",
+      "red_flags": [
+        "unusual_payment"
+      ],
+      "evidence": [
+        "refund we owe you",
+        "send the difference back",
+        "gift cards from the shop"
+      ],
+      "reason": "They are asking you to pay money with gift cards, which is a common scam.",
+      "seconds": 0.84,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s07_romance_medical_polite",
+      "label": "scam",
+      "expected_scam_type": "romance",
+      "tags": [
+        "polite"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 78,
+      "scam_type": "romance",
+      "red_flags": [
+        "money_for_stranger",
+        "unusual_payment"
+      ],
+      "evidence": [
+        "my daughter is in hospital back home",
+        "could you send something through a money transfer app",
+        "Only if you're comfortable"
+      ],
+      "reason": "They are asking you to send money to a stranger who says they need it urgently.",
+      "seconds": 0.67,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s08_romance_crypto",
+      "label": "scam",
+      "expected_scam_type": "romance",
+      "tags": [
+        "crypto"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 85,
+      "scam_type": "romance",
+      "red_flags": [
+        "unusual_payment",
+        "money_for_stranger"
+      ],
+      "evidence": [
+        "Just buy some bitcoin and send it to the wallet address I'll text you.",
+        "Do it tonight before the price goes up."
+      ],
+      "reason": "They are asking you to send money in crypto right away, which is a common romance scam.",
+      "seconds": 0.6,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s09_prize_gift_cards",
+      "label": "scam",
+      "expected_scam_type": "prize",
+      "tags": [
+        "urgent"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 95,
+      "scam_type": "prize",
+      "red_flags": [
+        "asks_for_code",
+        "unusual_payment"
+      ],
+      "evidence": [
+        "you've won the national prize draw",
+        "pay a handling fee of two hundred pounds",
+        "we can only accept that in gift cards"
+      ],
+      "reason": "They are asking you to pay a fee with gift cards and give the codes, which is a common scam.",
+      "seconds": 0.76,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s10_prize_refund_fee_polite",
+      "label": "scam",
+      "expected_scam_type": "prize",
+      "tags": [
+        "polite",
+        "secrecy"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 82,
+      "scam_type": "prize",
+      "red_flags": [
+        "unusual_payment",
+        "safe_account"
+      ],
+      "evidence": [
+        "refund you're owed from an old insurance policy",
+        "small processing fee of a hundred and fifty pounds, which you can pay by bank transfer",
+        "please don't mention it to family or your bank until it's paid out"
+      ],
+      "reason": "They are asking you to pay a fee in secret before you get money, which is a common scam.",
+      "seconds": 0.79,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s11_other_tax_arrest_threat",
+      "label": "scam",
+      "expected_scam_type": "other",
+      "tags": [
+        "urgent",
+        "outside_the_five_types"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 90,
+      "scam_type": "other",
+      "red_flags": [
+        "unusual_payment"
+      ],
+      "evidence": [
+        "warrant has been issued for your arrest",
+        "paying now",
+        "gift cards"
+      ],
+      "reason": "They are trying to scare you and ask for gift cards, which is a scam.",
+      "seconds": 0.82,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "s12_grandchild_asr_errors",
+      "label": "scam",
+      "expected_scam_type": "grandchild",
+      "tags": [
+        "asr_errors",
+        "both_sides"
+      ],
+      "level": "red",
+      "outcome": "caught",
+      "risk": 85,
+      "scam_type": "grandchild",
+      "red_flags": [
+        "unusual_payment",
+        "money_for_stranger"
+      ],
+      "evidence": [
+        "need help with money today",
+        "please dont tell mum",
+        "a man will come and pick it up at six"
+      ],
+      "reason": "They are asking for cash quickly and telling you to keep it secret, which is a common scam.",
+      "seconds": 0.95,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n01_bank_returning_call",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The caller is just confirming a new card and does not ask for money, codes, or secrecy.",
+      "seconds": 0.42,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n02_delivery_left_with_neighbour",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "They are just telling you about a delivery and not asking for money or personal information.",
+      "seconds": 0.64,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n03_neighbour_emergency",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike",
+        "urgent"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "It sounds like a real emergency about your sister, not a request for money or personal info.",
+      "seconds": 0.51,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n04_surgery_date_of_birth",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike",
+        "personal_detail",
+        "both_sides"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "It's just a normal medical appointment call, not asking for money or passwords.",
+      "seconds": 0.79,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n05_grandchild_school_trip",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike",
+        "money"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "They are just talking about a school trip and not asking for money, codes, or secrecy.",
+      "seconds": 0.46,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n06_grandson_fixes_laptop",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike",
+        "remote_access",
+        "hard"
+      ],
+      "level": "red",
+      "outcome": "false_alarm",
+      "risk": 75,
+      "scam_type": "tech_support",
+      "red_flags": [
+        "asks_for_code",
+        "remote_control"
+      ],
+      "evidence": [
+        "Open the app with the blue icon I put on there and read me the number it shows",
+        "I can sort it from here like last time"
+      ],
+      "reason": "They want you to give them a code and control your computer, which is a common scam.",
+      "seconds": 0.65,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n07_partner_away_chat",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 5,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The caller is just chatting and not asking for money, codes, or anything suspicious.",
+      "seconds": 0.32,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n08_friend_tells_scam_story",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike",
+        "scam_words",
+        "hard"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The speaker is just talking about a past scam and making plans, not asking for money or information.",
+      "seconds": 0.49,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n09_insurance_renewal",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "They are just informing you about a policy renewal and not asking for money or personal codes.",
+      "seconds": 0.76,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n10_sunday_lunch",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "plain"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 5,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The caller is just confirming family plans and asks you to come, with no request for money, codes, or secrecy.",
+      "seconds": 0.58,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n11_engineer_visit",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "lookalike"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 10,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The call is just confirming a scheduled engineer visit and does not ask for money, codes, or secrecy.",
+      "seconds": 0.47,
+      "attempts": 1,
+      "error": null
+    },
+    {
+      "id": "n12_friend_chat_asr_errors",
+      "label": "normal",
+      "expected_scam_type": "none",
+      "tags": [
+        "plain",
+        "asr_errors"
+      ],
+      "level": "green",
+      "outcome": "correct",
+      "risk": 5,
+      "scam_type": "none",
+      "red_flags": [],
+      "evidence": [],
+      "reason": "The caller is just chatting and not asking for money, codes, or anything secret.",
+      "seconds": 0.39,
+      "attempts": 1,
+      "error": null
+    }
+  ]
+}
