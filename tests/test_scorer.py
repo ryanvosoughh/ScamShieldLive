@@ -1,7 +1,7 @@
 import pytest
 
 from app.config import Settings
-from app.models import RiskLevel, TextSignal, ToneSignal, VoiceSignal
+from app.models import RiskLevel, TextSignal
 from app.scoring import RiskScorer
 
 GREEN, YELLOW, RED, UNKNOWN = RiskLevel.GREEN, RiskLevel.YELLOW, RiskLevel.RED, RiskLevel.UNKNOWN
@@ -52,30 +52,6 @@ def test_bad_settings_are_rejected():
         RiskScorer(yellow_threshold=70, red_threshold=40)
     with pytest.raises(ValueError):
         RiskScorer(rise=0.2, fall=0.5)
-
-
-# 2.22 Weighted combination
-
-
-def test_with_only_the_words_the_score_is_the_words():
-    assert unsmoothed().update(words(55)).score == 55
-
-
-def test_a_tense_voice_raises_the_score_a_little():
-    state = unsmoothed().update(words(20), tone=ToneSignal(risk=80))
-    # (0.75 * 20 + 0.15 * 80) / 0.90 = 30
-    assert state.score == pytest.approx(30)
-
-
-def test_a_calm_voice_never_lowers_what_the_words_show():
-    state = unsmoothed().update(words(80), tone=ToneSignal(risk=0), voice=VoiceSignal(risk=0))
-    assert state.score == 80
-    assert state.level is RED
-
-
-def test_tone_alone_is_never_a_verdict():
-    state = unsmoothed().update(FAILED, tone=ToneSignal(risk=95))
-    assert state.level is UNKNOWN
 
 
 # 2.23 Moving average
@@ -182,19 +158,6 @@ def test_the_next_good_check_clears_stale():
     assert state.stale is False
 
 
-# 2.25 Disagreement
-
-
-def test_signals_far_apart_are_recorded_as_disagreeing():
-    state = unsmoothed().update(words(85), tone=ToneSignal(risk=10))
-    assert "words point to 85/100" in state.disagreement
-    assert "tone points to 10/100" in state.disagreement
-
-
-def test_signals_that_roughly_agree_are_not_flagged():
-    assert unsmoothed().update(words(50), tone=ToneSignal(risk=30)).disagreement is None
-
-
 # Evidence and red flags for the whole call
 
 
@@ -209,14 +172,15 @@ def test_evidence_and_red_flags_build_up_over_the_call_without_repeats():
 # 2.28 explain()
 
 
-def test_explain_gives_a_line_per_signal_and_the_result():
+def test_explain_gives_the_words_and_the_result():
     scorer = RiskScorer()
-    scorer.update(words(90, red_flags=["asks_for_code"]), tone=ToneSignal(risk=60, detail="fast speech"))
+    assert scorer.state.breakdown == ("Words: not checked yet",)
+    scorer.update(words(90, red_flags=["asks_for_code"]))
     lines = scorer.explain()
-    assert lines[0] == "Words: 90/100, weight 0.75, grandchild, red flags: asks_for_code"
-    assert lines[1] == "Tone: 60/100, weight 0.15, fast speech"
-    assert lines[2] == "Voice: not measured"
-    assert lines[3] == "Smoothed score: 90/100, level red"
+    assert lines == [
+        "Words: 90/100, grandchild, red flags: asks_for_code",
+        "Smoothed score: 90/100, level red",
+    ]
     assert scorer.state.breakdown == tuple(lines)
 
 

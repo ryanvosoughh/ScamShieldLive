@@ -45,7 +45,6 @@ export class RiskMeter {
     if (state.stale && state.level !== "unknown") {
       notes.push("The latest check didn't answer, so this is the last result.");
     }
-    if (state.disagreement) notes.push(state.disagreement);
 
     if (state.level === "unknown") {
       this.show("unknown", {

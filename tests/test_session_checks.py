@@ -281,7 +281,7 @@ def test_the_state_message_is_plain_json():
     assert json.loads(json.dumps(state)) == state
     assert set(state) == {
         "type", "level", "score", "scam_type", "reason", "next_action",
-        "evidence", "red_flags", "disagreement", "stale", "breakdown",
+        "evidence", "red_flags", "stale", "breakdown",
         "headline", "speak",
     }
 

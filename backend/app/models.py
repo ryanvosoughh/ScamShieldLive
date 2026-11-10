@@ -64,29 +64,6 @@ class TextSignal:
 
 
 @dataclass(frozen=True)
-class ToneSignal:
-    """How pressured the speech sounds (speech rate, loudness). A weak signal; arrives in Phase 3.
-
-    risk is None when there isn't enough audio to judge.
-    """
-
-    risk: int | None  # 0-100
-    detail: str = ""  # e.g. "fast, loud speech"
-
-
-@dataclass(frozen=True)
-class VoiceSignal:
-    """Whether the voice sounds synthetic. Experimental; a Phase 4 bonus.
-
-    risk is None when the check is uncertain, e.g. on poor phone audio. Shown as
-    "voice quality unusual", never as an accusation.
-    """
-
-    risk: int | None  # 0-100
-    detail: str = ""
-
-
-@dataclass(frozen=True)
 class RiskState:
     """What the risk meter shows after each check."""
 
@@ -97,6 +74,5 @@ class RiskState:
     next_action: str = ""
     evidence: tuple[str, ...] = ()  # every evidence phrase heard so far in the call
     red_flags: tuple[str, ...] = ()  # every red flag heard so far in the call
-    disagreement: str | None = None  # set when the signals point different ways
     stale: bool = False  # the latest check failed; this is the last good result
-    breakdown: tuple[str, ...] = ()  # one line per signal, from RiskScorer.explain()
+    breakdown: tuple[str, ...] = ()  # how the level was reached, from RiskScorer.explain()
