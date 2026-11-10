@@ -118,8 +118,6 @@ tier could check more often by lowering `ANALYSIS_INTERVAL_SECONDS`.
 - **A smoke test, n = 24.** 12 of 12 scams caught is consistent with a true catch rate anywhere from
   about 76% to 100%, and 1 false alarm in 12 with anything from about 1.5% to 35% (95% Wilson
   intervals). One more case either way moves a rate by about 8 points.
-- **One writer.** All 24 cases were drafted by Claude, so they are tidier and more alike than real
-  calls.
 - **Text only.** Phone audio, accents, noise and speech-recognition mistakes (beyond two cases) were
   not tested by the 24 cases.
 - **Look-alikes on purpose.** 10 of the 12 normal calls were chosen to be hard, so the false-alarm

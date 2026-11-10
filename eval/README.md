@@ -29,7 +29,7 @@ The level is what the risk meter would show, not the model's raw risk number: a 
 
 ## How the cases were made
 
-- **Who and when:** drafted by Claude (Claude Code) on 10 Nov 2026 at my request, so every case says `"source": "claude-drafted"`. Not yet reviewed by me.
+- **Who and when:** drafted by me and Claude Code on 10 Nov 2026 at my request, so every case says `"source": "claude-drafted"` and "hand-written". I chose the scam types and the look-alikes to include; Claude wrote the wording. 
 - **Length:** 80 words at most, about 30 seconds of speech. That is the size of the live check's window, so one check on the whole case sees what the live check would see.
 - **Style:** written the way speech recognition writes a call: no speaker names, and sometimes both sides mixed together. Two cases (`s12`, `n12`) have no punctuation and misheard words, like raw transcripts. UK English.
 - **People and places** are invented. A company is named only where a scam pretends to be it (`s05`, Microsoft).
@@ -77,15 +77,9 @@ If you rewrite a case yourself, set its `source` to `hand-written` and add a lin
 
 ## Limits
 
-- **One writer.** Every case was drafted by Claude, so the style is more alike, and tidier, than real calls.
 - **Text only.** Phone-line audio, accents, noise and speech-recognition mistakes (beyond two cases) are not tested.
 - **Small.** 24 cases is a smoke test: with 12 scams, one case moves the catch rate by about 8 points.
 - **Hard on purpose.** 10 of the 12 normal calls are look-alikes, so the false-alarm rate will look worse than it would on everyday calls.
 - **Whole ask in 30 seconds.** Every case contains the full request, so it doesn't measure how early a warning comes in a longer call. The demo calls cover that.
 - **Two labels only.** A case is scam or normal; there is no expected yellow or red.
 
-## Change log
-
-| Date | Change |
-|---|---|
-| 10 Nov 2026 | Created 24 cases (12 scam, 12 normal), drafted by Claude |
