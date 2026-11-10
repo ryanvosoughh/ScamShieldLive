@@ -106,3 +106,5 @@ with a red flag. The gaps say how long after each one the meter changed.
 
 - **`n06_grandson_fixes_laptop`, false alarm:** the meter showed red (model risk 75, red flags: asks_for_code, remote_control). The model's reason: "They want you to give them a code and control your computer, which is a common scam."
 - **`s04_bank_safe_account_polite`, near miss:** caught, but the model's risk was 55, under the red line of 70; a red flag made it red (safe_account).
+
+Why each one happened, and what would fix it: `failure_analysis.md`.
