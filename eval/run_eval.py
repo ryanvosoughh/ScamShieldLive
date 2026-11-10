@@ -115,20 +115,25 @@ def print_summary(results: list[dict]) -> None:
 
 def run_info(settings: Settings, cases_text: str, cases: int) -> dict:
     """What produced these results, so they can be traced back later."""
-    prompt = SYSTEM_PROMPT + json.dumps(OUTPUT_SCHEMA, sort_keys=True)
     return {
         "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": settings.live_model,
         "yellow_threshold": settings.risk_yellow_threshold,
         "red_threshold": settings.risk_red_threshold,
-        "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest()[:12],
+        "prompt_sha256": prompt_fingerprint(),
         "cases_sha256": hashlib.sha256(cases_text.encode()).hexdigest()[:12],
-        "git_commit": _git_commit(),
+        "git_commit": git_commit(),
         "cases": cases,
     }
 
 
-def _git_commit() -> str | None:
+def prompt_fingerprint() -> str:
+    """A short fingerprint of the live prompt and answer format; it changes whenever either does."""
+    prompt = SYSTEM_PROMPT + json.dumps(OUTPUT_SCHEMA, sort_keys=True)
+    return hashlib.sha256(prompt.encode()).hexdigest()[:12]
+
+
+def git_commit() -> str | None:
     """The commit the code came from, marked if the code or cases had uncommitted changes."""
     try:
         commit = subprocess.run(

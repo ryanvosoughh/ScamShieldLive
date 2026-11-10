@@ -7,6 +7,8 @@
 ```
 .venv/bin/python eval/run_eval.py             # all cases, about 5 minutes; saves eval/results.json
 .venv/bin/python eval/run_eval.py --limit 3   # a quick try on 3 cases; saves nothing
+.venv/bin/python eval/time_to_warning.py      # the 3 demo calls in real time, about 3 minutes; saves eval/timing.json
+.venv/bin/python eval/make_report.py          # writes eval/results.md from those files; no Groq calls
 ```
 
 ```
