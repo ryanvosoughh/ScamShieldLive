@@ -1,4 +1,4 @@
-"""ScamAnalyzer with Groq replaced by a fake: replies, failures, retries and injection."""
+"""ScamAnalyzer with Groq replaced by a fake: replies, failures and injection."""
 import asyncio
 import json
 from types import SimpleNamespace
@@ -10,6 +10,8 @@ import pytest
 from app.analysis import ScamAnalyzer
 from app.analysis.analyzer import InvalidReply, parse_reply
 from app.analysis.prompts import SYSTEM_PROMPT
+from app.models import RiskLevel
+from app.scoring import RiskScorer
 
 SCAM = (
     "Hi, Nana. It's me. I'm in real trouble, and I need your help right now. "
@@ -90,23 +92,23 @@ def test_the_request_uses_strict_json_and_the_live_model():
 # Bad replies (2.13, 2.14)
 
 
-def test_bad_json_is_retried_once_then_given_up_as_unknown():
-    scam, calls = analyzer("not json {", "still not json")
+def test_bad_json_is_unknown_and_not_asked_again():
+    scam, calls = analyzer("not json {")
     signal = run(scam.analyze(SCAM))
     assert signal.is_unknown
     assert "not JSON" in signal.error
-    assert len(calls.calls) == 2  # the first try and exactly one retry
+    assert len(calls.calls) == 1  # the next check is the retry
 
 
-def test_a_bad_reply_followed_by_a_good_one_recovers():
-    scam, calls = analyzer("oops", GOOD)
+def test_the_next_check_after_a_failure_works():
+    scam, _ = analyzer("oops", GOOD)
+    assert run(scam.analyze(SCAM)).is_unknown
     assert run(scam.analyze(SCAM)).risk == 90
-    assert len(calls.calls) == 2
 
 
 def test_a_missing_field_is_unknown():
     incomplete = {k: v for k, v in GOOD.items() if k != "risk"}
-    scam, _ = analyzer(incomplete, incomplete)
+    scam, _ = analyzer(incomplete)
     signal = run(scam.analyze(SCAM))
     assert signal.is_unknown
     assert "missing risk" in signal.error
@@ -148,42 +150,23 @@ def test_a_json_list_instead_of_an_object_is_rejected():
 # Red flags: a polite tone can't talk the score down
 
 
-def test_a_red_flag_lifts_a_calm_call_to_the_red_line():
+def test_a_calm_call_with_a_red_flag_keeps_its_risk_and_the_meter_shows_red():
     calm = {**GOOD, "risk": 55, "red_flags": ["asks_for_code"]}
-    assert parse_reply(json.dumps(calm), SCAM).risk == 70
-
-
-def test_the_red_flag_floor_follows_the_red_threshold():
-    calm = {**GOOD, "risk": 55, "red_flags": ["asks_for_code"]}
-    assert parse_reply(json.dumps(calm), SCAM, red_flag_floor=80).risk == 80
-
-
-def test_a_red_flag_never_lowers_a_higher_risk():
-    assert parse_reply(json.dumps({**GOOD, "risk": 95}), SCAM).risk == 95
-
-
-def test_without_red_flags_the_model_risk_stands():
-    mild = {**GOOD, "risk": 30, "red_flags": []}
-    assert parse_reply(json.dumps(mild), SCAM).risk == 30
+    signal = parse_reply(json.dumps(calm), SCAM)
+    assert signal.risk == 55  # the model's own score, passed on as it is
+    assert signal.red_flags == ("asks_for_code",)
+    assert RiskScorer().update(signal).level is RiskLevel.RED  # the scorer applies the rule
 
 
 def test_a_call_with_a_red_flag_is_never_labelled_no_scam():
     mixed = {**GOOD, "risk": 20, "scam_type": "none", "red_flags": ["safe_account"]}
     signal = parse_reply(json.dumps(mixed), SCAM)
     assert signal.scam_type == "other"
-    assert signal.risk == 70
 
 
 def test_repeated_red_flags_are_kept_once():
     twice = {**GOOD, "red_flags": ["asks_for_code", "unusual_payment", "asks_for_code"]}
     assert parse_reply(json.dumps(twice), SCAM).red_flags == ("asks_for_code", "unusual_payment")
-
-
-def test_from_settings_uses_the_red_threshold_as_the_floor():
-    from app.config import Settings
-
-    settings = Settings.from_env({"DEMO_MODE": "true", "GROQ_API_KEY": "test-key", "RISK_RED_THRESHOLD": "80"})
-    assert ScamAnalyzer.from_settings(settings).red_flag_floor == 80
 
 
 def test_evidence_nobody_said_is_dropped():
@@ -203,49 +186,32 @@ def test_long_text_is_clipped_for_the_screen():
     assert len(signal.reason) <= 300
 
 
-# Timeouts and API errors (2.15, 2.16, 2.17)
+# Timeouts and API errors (2.15, 2.17)
 
 
-def test_a_hung_call_times_out_and_is_retried_once():
-    scam, calls = analyzer("hang", "hang", timeout=0.05)
+def test_a_hung_call_times_out_as_unknown():
+    scam, calls = analyzer("hang", timeout=0.05)
     signal = run(scam.analyze(SCAM))
     assert signal.is_unknown
     assert "timed out" in signal.error
-    assert len(calls.calls) == 2
-
-
-def test_a_timeout_then_a_good_reply_recovers():
-    scam, _ = analyzer("hang", GOOD, timeout=0.05)
-    assert run(scam.analyze(SCAM)).risk == 90
-
-
-def test_a_network_error_is_retried():
-    scam, calls = analyzer(groq.APIConnectionError(request=REQUEST), GOOD)
-    assert run(scam.analyze(SCAM)).risk == 90
-    assert len(calls.calls) == 2
-
-
-def test_a_server_error_twice_is_unknown():
-    error = status_error(groq.InternalServerError, 503)
-    scam, _ = analyzer(error, error)
-    signal = run(scam.analyze(SCAM))
-    assert signal.is_unknown
-    assert "503" in signal.error
+    assert len(calls.calls) == 1
 
 
 @pytest.mark.parametrize(
     "error, message",
     [
+        (groq.APIConnectionError(request=REQUEST), "could not reach Groq"),
+        (status_error(groq.InternalServerError, 503), "503"),
         (status_error(groq.RateLimitError, 429), "rate limit"),
         (status_error(groq.AuthenticationError, 401), "API key"),
     ],
 )
-def test_rate_limits_and_bad_keys_are_not_retried(error, message):
-    scam, calls = analyzer(error, GOOD)
+def test_api_failures_are_unknown_and_say_why(error, message):
+    scam, calls = analyzer(error)
     signal = run(scam.analyze(SCAM))
     assert signal.is_unknown
     assert message in signal.error
-    assert len(calls.calls) == 1  # asking again straight away would not help
+    assert len(calls.calls) == 1
 
 
 def test_an_unexpected_reply_shape_is_unknown_not_a_crash():
@@ -254,7 +220,7 @@ def test_an_unexpected_reply_shape_is_unknown_not_a_crash():
 
 
 def test_unknown_is_never_safe():
-    scam, _ = analyzer("bad", "bad")
+    scam, _ = analyzer("bad")
     signal = run(scam.analyze(SCAM))
     assert signal.risk is None  # not 0
     assert signal.scam_type == "unknown"  # not "none"

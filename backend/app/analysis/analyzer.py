@@ -2,12 +2,13 @@
 
 Every failure (timeout, network, rate limit, a reply that doesn't fit the
 answer format) ends as an UNKNOWN signal. Nothing here ever turns a failure
-into "safe".
+into "safe". A failed check isn't retried here: the next check, a few seconds
+later, asks again anyway.
 
 The model is good at spotting what was asked for ("read me the code") but
 tends to score calm, polite calls too low. So it also reports which red flags
-it heard, and any red flag keeps the risk at or above the red threshold: a
-pleasant tone can't talk the score down.
+it heard, and the scorer turns any red flag into red: a pleasant tone can't
+talk the score down.
 """
 from __future__ import annotations
 
@@ -32,8 +33,6 @@ DEFAULT_TIMEOUT_SECONDS = 4.0
 MAX_COMPLETION_TOKENS = 600
 MAX_EVIDENCE = 3
 MAX_TEXT_CHARS = 300  # longest reason or next action shown on screen
-# Lowest risk when any red flag is heard. from_settings() uses the red threshold.
-DEFAULT_RED_FLAG_FLOOR = 70
 
 RESPONSE_FORMAT = {
     "type": "json_schema",
@@ -41,64 +40,39 @@ RESPONSE_FORMAT = {
 }
 ALLOWED_SCAM_TYPES = frozenset(OUTPUT_SCHEMA["properties"]["scam_type"]["enum"])
 
-# Failures where asking again straight away can't help. A rate limit clears in
-# its own time (and the next tick will try anyway); the others need a fix.
-_NOT_WORTH_RETRYING = (
-    groq.RateLimitError,
-    groq.AuthenticationError,
-    groq.PermissionDeniedError,
-    groq.BadRequestError,
-    groq.NotFoundError,
-)
-
 
 class InvalidReply(Exception):
     """The model answered, but not with a usable verdict."""
 
 
 class ScamAnalyzer:
-    def __init__(
-        self,
-        client: Any,
-        model: str,
-        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
-        retries: int = 1,
-        red_flag_floor: int = DEFAULT_RED_FLAG_FLOOR,
-    ) -> None:
+    def __init__(self, client: Any, model: str, timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS) -> None:
         self._client = client  # groq.AsyncGroq, or a fake in tests
         self.model = model
         self.timeout_seconds = timeout_seconds
-        self.retries = retries
-        self.red_flag_floor = red_flag_floor
 
     @classmethod
     def from_settings(cls, settings: Settings) -> ScamAnalyzer | None:
         """The live analyser, or None when there is no Groq key."""
         if not settings.groq_api_key:
             return None
-        # The SDK's own retries are turned off: analyze() decides when to retry.
+        # The SDK's own retries are off too, so one check is always one request
+        # and the free tier's per-minute budget stays predictable.
         client = groq.AsyncGroq(api_key=settings.groq_api_key, max_retries=0)
-        return cls(client, settings.live_model, red_flag_floor=settings.risk_red_threshold)
+        return cls(client, settings.live_model)
 
     async def analyze(self, window_text: str) -> TextSignal:
-        """Check the transcript once, retrying once if the first try fails."""
-        messages = build_prompt(window_text)
-        error = "not run"
-        for attempt in range(1, self.retries + 2):
-            try:
-                raw = await asyncio.wait_for(self._ask(messages), self.timeout_seconds)
-                return parse_reply(raw, window_text, self.red_flag_floor)
-            except TimeoutError:
-                error = f"timed out after {self.timeout_seconds:g} s"
-            except _NOT_WORTH_RETRYING as exc:
-                return _unknown(_describe(exc))
-            except (groq.APIError, InvalidReply) as exc:  # network, server error, bad reply
-                error = _describe(exc)
-            except Exception as exc:  # a bug or an odd reply shape: still never "safe"
-                logger.exception("Scam check failed unexpectedly")
-                return _unknown(f"unexpected {type(exc).__name__}")
-            logger.warning("Scam check attempt %d failed: %s", attempt, error)
-        return _unknown(error)
+        """Check the transcript once. Any failure comes back as UNKNOWN."""
+        try:
+            raw = await asyncio.wait_for(self._ask(build_prompt(window_text)), self.timeout_seconds)
+            return parse_reply(raw, window_text)
+        except TimeoutError:
+            return _unknown(f"timed out after {self.timeout_seconds:g} s")
+        except (groq.APIError, InvalidReply) as exc:  # network, rate limit, bad key, server error, bad reply
+            return _unknown(_describe(exc))
+        except Exception as exc:  # a bug or an odd reply shape: still never "safe"
+            logger.exception("Scam check failed unexpectedly")
+            return _unknown(f"unexpected {type(exc).__name__}")
 
     async def _ask(self, messages: list[dict[str, str]]) -> str:
         reply = await self._client.chat.completions.create(
@@ -116,7 +90,7 @@ class ScamAnalyzer:
         return content
 
 
-def parse_reply(raw: str, transcript: str, red_flag_floor: int = DEFAULT_RED_FLAG_FLOOR) -> TextSignal:
+def parse_reply(raw: str, transcript: str) -> TextSignal:
     """Turn the model's JSON into a TextSignal, or raise InvalidReply.
 
     Strict mode should already give the right shape, but the reply is still
@@ -151,11 +125,9 @@ def parse_reply(raw: str, transcript: str, red_flag_floor: int = DEFAULT_RED_FLA
             raise InvalidReply(f"{name} must be a non-empty string")
 
     red_flags = tuple(dict.fromkeys(red_flags))  # drop repeats, keep order
-    if red_flags:
-        # A red flag is high risk however politely it was put.
-        risk = max(risk, red_flag_floor)
-        if scam_type == NO_SCAM:
-            scam_type = OTHER_SCAM  # never label a call with a red flag "no scam"
+    # The risk is left as the model gave it; the scorer turns a red flag into red.
+    if red_flags and scam_type == NO_SCAM:
+        scam_type = OTHER_SCAM  # never label a call with a red flag "no scam"
 
     return TextSignal(
         risk=risk,

@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.analysis import ScamAnalyzer  # noqa: E402
 from app.config import ConfigError, Settings  # noqa: E402
+from app.scoring import RiskScorer  # noqa: E402
 
 
 def main() -> int:
@@ -46,7 +47,10 @@ def main() -> int:
     if signal.is_unknown:
         print(f"\n  No verdict ({signal.error}). The app would show this as UNKNOWN, not safe.\n")
         return 1
-    print(f"\n  Risk:      {signal.risk}/100   ({signal.scam_type})")
+    # The meter can be redder than the risk: the scorer turns any red flag into red.
+    level = RiskScorer.from_settings(settings).update(signal).level
+    print(f"\n  Meter:     {level.value.upper()}")
+    print(f"  Risk:      {signal.risk}/100   ({signal.scam_type})")
     print(f"  Reason:    {signal.reason}")
     print(f"  Do this:   {signal.next_action}")
     if signal.red_flags:

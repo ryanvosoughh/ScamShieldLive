@@ -19,7 +19,6 @@ from app.analysis.prompts import RED_FLAGS
 
 CALLS_DIR = Path(__file__).resolve().parent / "calls"
 DEFAULT_SCENARIO = "grandchild_scam"
-RED_FLAG_MIN_RISK = 70  # same rule as the live check: a red flag is high risk
 
 
 class DemoError(Exception):
@@ -133,8 +132,6 @@ def _verdict(raw: dict) -> Verdict:
     unknown = [flag for flag in verdict.red_flags if flag not in RED_FLAGS]
     if unknown:
         raise ValueError(f"unknown red flags {unknown}")
-    if verdict.red_flags and verdict.risk < RED_FLAG_MIN_RISK:
-        raise ValueError("a verdict with a red flag must have risk of at least 70")
     if not verdict.reason or not verdict.next_action:
         raise ValueError("a verdict needs a reason and a next action")
     return verdict
