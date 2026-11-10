@@ -11,6 +11,7 @@ export class MicCapture {
     this.onChunk = onChunk;
     this.onError = onError;
     this.running = false;
+    this.paused = false; // true while a spoken warning plays, so the app doesn't hear itself
   }
 
   get label() {
@@ -31,7 +32,8 @@ export class MicCapture {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
-          // Echo cancellation will matter in Phase 3, when the app speaks alerts out loud.
+          // Helps, but doesn't reliably cancel the app's own spoken warnings,
+          // so the mic is also paused while one plays (see pause()).
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
@@ -52,7 +54,7 @@ export class MicCapture {
       processorOptions: { targetRate: TARGET_RATE, chunkSamples: CHUNK_SAMPLES },
     });
     this.node.port.onmessage = (event) => {
-      if (this.running) this.onChunk(event.data);
+      if (this.running && !this.paused) this.onChunk(event.data);
     };
 
     const [track] = this.stream.getAudioTracks();
@@ -68,6 +70,16 @@ export class MicCapture {
     this.node.connect(this.context.destination);
     if (this.context.state === "suspended") await this.context.resume();
     this.running = true;
+  }
+
+  // The mic stays open, so listening picks up again at once; the audio in
+  // between is simply not sent. Deepgram's keep-alive covers the gap.
+  pause() {
+    this.paused = true;
+  }
+
+  resume() {
+    this.paused = false;
   }
 
   stop() {

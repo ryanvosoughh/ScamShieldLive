@@ -3,7 +3,8 @@ import asyncio
 import json
 import time
 
-from app.models import TextSignal, TranscriptSegment
+from app.alerts import lines_for
+from app.models import Persona, RiskLevel, TextSignal, TranscriptSegment
 from app.session import CallSession, state_message
 from app.stt import SpeechToTextClient
 
@@ -281,7 +282,44 @@ def test_the_state_message_is_plain_json():
     assert set(state) == {
         "type", "level", "score", "scam_type", "reason", "next_action",
         "evidence", "red_flags", "disagreement", "stale", "breakdown",
+        "headline", "speak",
     }
+
+
+# The alert policy: the meter's headline and the spoken warning
+
+
+def test_a_new_warning_comes_with_its_headline_and_a_line_to_say():
+    analyzer = FakeAnalyzer(risk=90)
+
+    async def scenario(session):
+        await session.on_transcript(final(SCAM_LINE))
+        await asyncio.sleep(0.05)
+
+    _, sent = run_call(scenario, analyzer)
+    [state] = states(sent)
+    assert state["headline"] == lines_for(RiskLevel.RED).screen
+    assert state["speak"] == lines_for(RiskLevel.RED).spoken
+
+
+def test_the_same_warning_is_not_said_again_on_the_next_check():
+    _, sent = check_each_line(FakeAnalyzer(risk=90), 3)
+    spoken = [s["speak"] for s in states(sent)]
+    assert spoken == [lines_for(RiskLevel.RED).spoken, None, None]
+    assert {s["headline"] for s in states(sent)} == {lines_for(RiskLevel.RED).screen}  # still on screen
+
+
+def test_quiet_mode_and_persona_reach_the_alert():
+    async def scenario(session):
+        session.persona = Persona.GRAN
+        session.quiet_mode = True
+        await session.on_transcript(final(SCAM_LINE))
+        await asyncio.sleep(0.05)
+
+    _, sent = run_call(scenario, FakeAnalyzer(risk=90))
+    [state] = states(sent)
+    assert state["headline"] == lines_for(RiskLevel.RED, Persona.GRAN).screen
+    assert state["speak"] is None
 
 
 def test_state_message_uses_the_level_name():

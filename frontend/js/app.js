@@ -6,7 +6,8 @@
 //   Start  -> source.prepare() (mic permission / decode file; nothing for a demo)
 //          -> connect WebSocket -> server replies "ready" -> source.start()
 //   During -> "transcript" messages fill the transcript; "state" messages move
-//             the risk meter and highlight the evidence; "notice" messages put
+//             the risk meter, highlight the evidence and, when the server says
+//             so, speak a warning with the mic paused; "notice" messages put
 //             up (or take down) a banner while the call carries on
 //   Stop   -> stop audio, send {"type":"stop"} -> server flushes text, sends "ended"
 //   A demo call also ends by itself when its script is over.
@@ -18,6 +19,7 @@ import { ErrorBanner } from "./error-banner.js";
 import { FileSource } from "./file-source.js";
 import { MicCapture } from "./mic-capture.js";
 import { RiskMeter } from "./risk-meter.js";
+import { SpeechAlert } from "./speech-alert.js";
 import { TranscriptView } from "./transcript-view.js";
 import { WsClient, callSocketUrl } from "./ws-client.js";
 
@@ -27,6 +29,11 @@ const SERVER_DOWN = "Can't reach the ScamShield server. Start it with python run
 const HINTS = {
   live: "Put the call on speaker near this computer. Audio is processed live and nothing is stored.",
   demo: "A pretend call plays and its words appear below, just like a real one. No microphone is used.",
+};
+const SPEECH_HINTS = {
+  headphones:
+    "If you can, wear headphones plugged into this computer, so the caller can't hear the spoken warnings. The microphone pauses for a moment while each warning plays.",
+  unsupported: "This browser can't say warnings out loud, so keep an eye on the screen.",
 };
 
 const els = {
@@ -42,6 +49,7 @@ const els = {
   liveControls: document.getElementById("live-controls"),
   demoControls: document.getElementById("demo-controls"),
   hint: document.getElementById("hint"),
+  speechHint: document.getElementById("speech-hint"),
   status: document.getElementById("status"),
   banner: document.getElementById("error-banner"),
   lag: document.getElementById("lag"),
@@ -50,8 +58,10 @@ const view = new TranscriptView(document.getElementById("transcript"));
 const meter = new RiskMeter(document.getElementById("risk"));
 const banner = new ErrorBanner(els.banner);
 const support = checkBrowser();
+const speech = new SpeechAlert({ onStart: pauseMic, onEnd: resumeMic });
 
 let call = null; // the call in progress, or null
+let micPausedFor = null; // the call whose mic is paused while a warning is spoken
 let demoCalls = []; // from /api/demo-calls
 let liveAllowed = true; // false when the server runs in demo mode, or the browser can't capture any audio
 
@@ -68,7 +78,10 @@ els.demoBtn.addEventListener("click", () => {
 });
 els.modeLive.addEventListener("change", applyMode);
 els.modeDemo.addEventListener("change", applyMode);
-els.stop.addEventListener("click", () => stopCall());
+els.stop.addEventListener("click", () => {
+  speech.cancel();
+  stopCall();
+});
 
 init();
 
@@ -103,6 +116,7 @@ async function init() {
   }
   if (!demoCalls.length) els.modeDemo.disabled = true;
   if (!liveAllowed) els.modeDemo.checked = true;
+  els.speechHint.textContent = speech.supported ? SPEECH_HINTS.headphones : SPEECH_HINTS.unsupported;
   els.modeNote.textContent = notes.join(" ");
   els.modeNote.hidden = notes.length === 0;
   applyMode();
@@ -122,6 +136,8 @@ function applyMode() {
   els.liveControls.hidden = demo;
   els.demoControls.hidden = !demo;
   els.hint.textContent = demo ? HINTS.demo : HINTS.live;
+  // Headphones only matter with a real caller; "can't speak" matters in both modes.
+  els.speechHint.hidden = !els.speechHint.textContent || (demo && speech.supported);
   const placeholder = document.querySelector("#transcript .placeholder");
   if (placeholder) {
     placeholder.textContent = demo
@@ -141,6 +157,7 @@ async function startCall(makeSource, { scenario = null } = {}) {
     onError: (message) => finish(current, message),
   });
 
+  speech.cancel();
   banner.clearCall();
   view.clear();
   meter.idle();
@@ -181,6 +198,7 @@ function onServerMessage(current, message) {
     case "state":
       meter.update(message);
       view.setEvidence(message.evidence || []);
+      if (message.speak) speech.say(message.speak);
       break;
     case "notice":
       // The call carries on; a notice with no message means the problem has gone.
@@ -248,6 +266,23 @@ function showLag(current, textEnd) {
   if (!Number.isFinite(lag) || lag < 0) return;
   current.worstLag = Math.max(current.worstLag, lag);
   els.lag.textContent = `Text delay ≈ ${lag.toFixed(1)} s (worst ${current.worstLag.toFixed(1)} s)`;
+}
+
+// While a warning is spoken, stop sending mic audio so the app doesn't hear
+// itself. Demo calls and audio files have no mic, so there is nothing to pause.
+function pauseMic() {
+  if (!call?.source.pause) return;
+  call.source.pause();
+  micPausedFor = call;
+  setStatus("busy", "Mic paused while the warning plays");
+}
+
+function resumeMic() {
+  const current = micPausedFor;
+  micPausedFor = null;
+  if (!current || current.finished) return;
+  current.source.resume();
+  setStatus("live", current.source.label);
 }
 
 function setBusy(busy) {

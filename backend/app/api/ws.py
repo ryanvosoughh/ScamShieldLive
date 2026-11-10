@@ -13,7 +13,9 @@ Messages to the browser (all JSON):
                                                      analysis is false when there is no Groq key;
                                                      demo describes the scripted call, or is null
   {"type": "transcript", "text", "is_final", ...}    live text
-  {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check
+  {"type": "state", "level", "score", "reason", ...} the risk meter, after each scam check, with
+                                                     "headline" for its title and "speak", the
+                                                     warning to say out loud now (or null)
   {"type": "notice", "code", "message"}              a problem that doesn't stop the call, e.g. the
                                                      scam check isn't answering or no words are
                                                      recognised; message null takes it down again

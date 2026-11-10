@@ -200,6 +200,15 @@ h2 {
   font-size: 0.95rem;
 }
 
+/* Sits straight under the main hint, as part of the same advice. */
+.hint:has(+ .hint--speech:not([hidden])) {
+  margin-bottom: 4px;
+}
+
+.hint--speech {
+  margin-top: 0;
+}
+
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);

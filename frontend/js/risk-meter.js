@@ -1,15 +1,10 @@
 // RiskMeter: the card at the top of the page that says how risky the call is.
 //
 // Plain words first, colour second: every level has its own wording, so the
-// meaning never depends on colour alone. The reason and "what to do" only
-// show for a warning (yellow or red): a green meter with a worrying sentence
-// next to it would be confusing.
-
-const TITLES = {
-  green: "No warning signs so far",
-  yellow: "Be careful",
-  red: "This sounds like a scam",
-};
+// meaning never depends on colour alone. The title is the server's "headline"
+// (alerts/wording.py), so the screen and the spoken warning use the same words.
+// The reason and "what to do" only show for a warning (yellow or red): a green
+// meter with a worrying sentence next to it would be confusing.
 
 // The red flags the scam check can report (RED_FLAGS in prompts.py), in plain words.
 const RED_FLAG_WORDS = {
@@ -54,7 +49,7 @@ export class RiskMeter {
 
     if (state.level === "unknown") {
       this.show("unknown", {
-        title: state.stale ? "Couldn't check the latest part" : "Not checked yet",
+        title: state.headline,
         reason: "The scam check didn't answer. It will try again with the next words.",
         notes,
         breakdown: state.breakdown,
@@ -62,7 +57,7 @@ export class RiskMeter {
       return;
     }
     this.show(state.level, {
-      title: TITLES[state.level],
+      title: state.headline,
       reason: warning ? state.reason : "Nothing worrying has been said.",
       action: warning ? state.next_action : "",
       flags: warning ? state.red_flags.map((flag) => RED_FLAG_WORDS[flag] || flag) : [],

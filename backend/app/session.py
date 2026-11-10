@@ -2,8 +2,9 @@
 
 Browser audio goes to speech-to-text, and the text comes back to the browser.
 Final text also goes into the transcript window; after new speech, the scam
-check runs on the window, the scorer turns the result into a level, and the
-new state goes to the browser.
+check runs on the window, the scorer turns the result into a level, the alert
+policy picks the meter's headline and whether to say a warning out loud, and
+the new state goes to the browser.
 
 When checks run (Groq's free tier allows about 8,000 tokens a minute, and a
 check is about 1,350):
@@ -25,8 +26,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from typing import Any
 
+from app.alerts import Alert, AlertPolicy, lines_for
 from app.analysis import ScamAnalyzer, TranscriptWindow
-from app.models import RiskState, TextSignal, TranscriptSegment
+from app.models import Persona, RiskState, TextSignal, TranscriptSegment
 from app.scoring import RiskScorer
 from app.stt import BYTES_PER_SAMPLE, SAMPLE_RATE, SpeechToTextClient
 
@@ -61,12 +63,16 @@ class CallSession:
         check_interval: float = DEFAULT_CHECK_INTERVAL_SECONDS,
         checks_per_minute: int = DEFAULT_CHECKS_PER_MINUTE,
         rate_window_seconds: float = 60.0,  # the "minute"; shorter only in tests
+        alerts: AlertPolicy | None = None,
     ) -> None:
         self._stt = stt
         self._send = send  # delivers one JSON message to the browser
         self._analyzer = analyzer  # None: no Groq key, so no scam checks
         self.scorer = scorer or RiskScorer()
         self.window = window or TranscriptWindow()
+        self.alerts = alerts or AlertPolicy()  # the meter's headline, and when to speak
+        self.persona = Persona.STANDARD  # the page will let people change these two (3C)
+        self.quiet_mode = False
         self.check_interval = check_interval
         self.checks_per_minute = checks_per_minute
         self.rate_window_seconds = rate_window_seconds
@@ -149,7 +155,10 @@ class CallSession:
                 took,
                 f" ({signal.error})" if signal.error else "",
             )
-            await self._send(state_message(state))  # 2.32
+            alert = self.alerts.decide(state, self.persona, self.quiet_mode)
+            if alert.spoken:
+                logger.info("Speaking the %s alert", alert.level.value)
+            await self._send(state_message(state, alert))  # 2.32
             await self._track_failures(signal)
             return state
 
@@ -214,10 +223,15 @@ class CallSession:
         await self._send({"type": "error", "code": "stt_failed", "message": message})
 
 
-def state_message(state: RiskState) -> dict[str, Any]:
-    """The JSON the browser gets after each check, in plain JSON types."""
+def state_message(state: RiskState, alert: Alert | None = None) -> dict[str, Any]:
+    """The JSON the browser gets after each check, in plain JSON types.
+
+    headline is the meter's title; speak is the line to say out loud now, or None.
+    """
     message: dict[str, Any] = {"type": "state"}
     for key, value in asdict(state).items():
         message[key] = list(value) if isinstance(value, tuple) else value
     message["level"] = state.level.value
+    message["headline"] = alert.screen if alert else lines_for(state.level).screen
+    message["speak"] = alert.spoken if alert else None
     return message
